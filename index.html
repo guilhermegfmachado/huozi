@@ -29,6 +29,23 @@
       --mono:        'IBM Plex Mono', monospace;
       --sans:        'IBM Plex Sans', sans-serif;
     }
+    [data-theme="light"] {
+      --bg:          #f7f5f0;
+      --bg-panel:    #edeae4;
+      --bg-hover:    #e4e1db;
+      --bg-active:   #dedad4;
+      --border:      #cdc9c3;
+      --border-soft: #d9d5cf;
+      --text:        #444;
+      --text-dim:    #888;
+      --text-bright: #111;
+      --accent:      #16a34a;
+      --accent-dim:  rgba(22,163,74,0.1);
+      --red:         #dc2626;
+    }
+    [data-theme="light"] .article:hover .a-title { color: #000; }
+    [data-theme="light"] #sidebar-overlay { background: rgba(0,0,0,0.3); }
+    [data-theme="light"] .src-tooltip { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
     /* ── RESET ───────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 15px; }
@@ -715,6 +732,7 @@
     <button class="t-btn" onclick="doRefresh()">↺ refresh</button>
     <button class="t-btn" id="btn-unread" onclick="toggleUnread()">unread</button>
     <button class="t-btn" id="btn-compact" onclick="toggleCompact()">compact</button>
+    <button class="t-btn" id="btn-theme" onclick="toggleTheme()" title="toggle light/dark">◑</button>
   </div>
 </div>
 <div id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
@@ -999,14 +1017,9 @@ async function fetchOne(f) {
     }));
   } catch { return []; }
 }
-async function loadCategory(cat, silent = false) {
-  if (S.fetchedCats.has(cat) && cat !== 'all') return;
-  S.fetchedCats.add(cat);
-  const feeds = cat === 'all' ? FEEDS : FEEDS.filter(f => f.cat === cat);
-  if (!silent) {
-    document.getElementById('articles').innerHTML =
-      `<div class="state-row"><div class="spinner"></div> fetching ${feeds.length} feeds…</div>`;
-  }
+// Priority feeds loaded first for fast initial render
+const PRIORITY = new Set(['bbc','guardian','nyt','ap','aljazeera','dw','ft','nhk']);
+async function fetchBatch(feeds) {
   const res = await Promise.allSettled(feeds.map(fetchOne));
   let newArticles = [];
   res.forEach((r, i) => {
@@ -1027,6 +1040,24 @@ async function loadCategory(cat, silent = false) {
   document.getElementById('c-all').textContent = S.articles.length;
   document.getElementById('updated').textContent = 'updated just now';
   updateStats(); render();
+}
+async function loadCategory(cat, silent = false) {
+  if (S.fetchedCats.has(cat) && cat !== 'all') return;
+  S.fetchedCats.add(cat);
+  const feeds = cat === 'all' ? FEEDS : FEEDS.filter(f => f.cat === cat);
+  if (!silent) {
+    document.getElementById('articles').innerHTML =
+      `<div class="state-row"><div class="spinner"></div> fetching feeds…</div>`;
+  }
+  if (cat === 'world-news') {
+    // Load priority feeds first → fast first paint, then rest in background
+    const priority = feeds.filter(f => PRIORITY.has(f.id));
+    const rest = feeds.filter(f => !PRIORITY.has(f.id));
+    await fetchBatch(priority);
+    fetchBatch(rest); // background, no await
+  } else {
+    await fetchBatch(feeds);
+  }
 }
 function refresh() {
   S.articles = [];
@@ -1321,7 +1352,21 @@ document.addEventListener('keydown', e => {
   if (e.key==='/' && document.activeElement!==searchEl) { e.preventDefault(); searchEl.focus(); }
   if (e.key==='Escape') { if(document.activeElement===searchEl) searchEl.blur(); else { closeModal(); closeReader(); } }
 });
+// ─── THEME ────────────────────────────────────────────────────────────────────
+function initTheme() {
+  const saved = localStorage.getItem('px_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('btn-theme').textContent = saved === 'dark' ? '☀' : '◑';
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('px_theme', next);
+  document.getElementById('btn-theme').textContent = next === 'dark' ? '☀' : '◑';
+}
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+initTheme();
 buildSidebar();
 loadCategory('world-news');
 </script>
