@@ -928,7 +928,7 @@ const S = {
   feed: 'all', sort: 'mixed',
   unread: false, compact: false,
   query: '', active: null, counts: {},
-  fetchedCats: new Set(['world-news']),
+  fetchedCats: new Set(),
   cache: {},
 };
 const saveSaved = () => localStorage.setItem('px_saved', JSON.stringify([...S.saved]));
