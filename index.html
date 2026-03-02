@@ -988,8 +988,17 @@ function toggleCatSection(catId) {
   const toggle = document.getElementById('ct-' + catId);
   const isCollapsed = feeds.classList.toggle('collapsed');
   toggle.textContent = isCollapsed ? '▸' : '▾';
-  if (!isCollapsed && !S.fetchedCats.has(catId)) {
-    loadCategory(catId, true);
+  if (!isCollapsed) {
+    // close all other categories
+    document.querySelectorAll('.sb-cat-feeds').forEach(el => {
+      if (el.id !== 'cf-' + catId && !el.classList.contains('collapsed')) {
+        el.classList.add('collapsed');
+        const otherId = el.id.replace('cf-', '');
+        const ot = document.getElementById('ct-' + otherId);
+        if (ot) ot.textContent = '▸';
+      }
+    });
+    if (!S.fetchedCats.has(catId)) loadCategory(catId, true);
   }
 }
 // ─── FETCH ───────────────────────────────────────────────────────────────────
