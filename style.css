@@ -265,7 +265,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   color: var(--text-dim);
   opacity: 0.6;
 }
-.a-time { margin-left: auto; font-size: 0.57rem; }
+.a-time { margin-left: auto; font-size: 0.57rem; cursor: default; }
 .a-read-time { font-size: 0.57rem; color: var(--text-dim); opacity: 0.45; }
 
 .a-title {
@@ -801,6 +801,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .dir-tag { font-size: 0.54rem; border: 1px solid var(--border); padding: 0.02rem 0.2rem; color: var(--text-dim); flex-shrink: 0; }
 .dir-tag.wire { border-color: #4488ff33; color: #4488ff; }
 .dir-tag.state-funded { border-color: #f5c54233; color: #f5c542; }
+.dir-tz { font-size: 0.52rem; color: var(--text-dim); opacity: 0.65; flex-shrink: 0; margin-left: auto; font-variant-numeric: tabular-nums; }
 .dir-link { font-size: 0.62rem; color: var(--text-dim); flex-shrink: 0; margin-left: 0.2rem; }
 .dir-link:hover { color: var(--accent); }
 .dir-notes {
