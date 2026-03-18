@@ -727,6 +727,158 @@
       flex-wrap: wrap;
       margin-top: 0.45rem;
     }
+    /* ── NEWS CATEGORY FILTER ────────────────────────────── */
+    #news-cat-filter {
+      display: flex; gap: 0.35rem; align-items: center;
+      padding: 0.3rem 1rem; border-bottom: 1px solid var(--border-soft);
+      background: var(--bg-panel); flex-shrink: 0; flex-wrap: wrap;
+    }
+    .cat-chip {
+      font-size: 0.6rem; font-family: var(--mono);
+      border: 1px solid var(--border); color: var(--text-dim);
+      padding: 0.08rem 0.4rem; cursor: pointer; background: none;
+      letter-spacing: 0.03em; transition: color 0.1s, border-color 0.1s;
+    }
+    .cat-chip:hover { color: var(--text); border-color: var(--text-dim); }
+    .cat-chip.on { color: var(--accent); border-color: var(--accent); }
+    /* ── SECTION PANELS ──────────────────────────────────── */
+    .section-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .section-panel.active { display: flex; }
+    .sec-bar {
+      height: 34px; flex-shrink: 0; display: flex; align-items: center;
+      padding: 0 1rem; border-bottom: 1px solid var(--border);
+      gap: 0.8rem; background: var(--bg);
+    }
+    .sec-title { font-size: 0.76rem; color: var(--text-bright); font-weight: 500; }
+    .sec-info { font-size: 0.65rem; color: var(--text-dim); }
+    .sec-ctrls { margin-left: auto; display: flex; gap: 0.35rem; align-items: center; }
+    .sec-body { flex: 1; overflow-y: auto; padding: 1rem; }
+    /* ── FORM ELEMENTS ───────────────────────────────────── */
+    .add-form {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      padding: 0.85rem; margin-bottom: 1rem; display: none;
+    }
+    .add-form.open { display: block; }
+    .form-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-end; }
+    .form-group { display: flex; flex-direction: column; gap: 0.2rem; }
+    .form-label {
+      font-size: 0.57rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-dim);
+    }
+    .form-input {
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--text-bright); font-family: var(--mono);
+      font-size: 0.72rem; padding: 0.28rem 0.5rem; outline: none; width: 110px;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input.wide { width: 160px; }
+    .form-btn {
+      font-size: 0.65rem; background: none; border: 1px solid var(--border);
+      color: var(--text-dim); padding: 0.28rem 0.65rem; cursor: pointer;
+      font-family: var(--mono); transition: color 0.1s, border-color 0.1s;
+    }
+    .form-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .form-btn.primary { color: var(--accent); border-color: var(--accent); }
+    .form-btn.danger:hover { color: var(--red); border-color: var(--red); }
+    /* ── PORTFOLIO ───────────────────────────────────────── */
+    .port-summary {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.6rem; margin-bottom: 1rem;
+    }
+    .port-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 0.7rem 0.85rem; }
+    .port-card-label {
+      font-size: 0.57rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 0.25rem;
+    }
+    .port-card-value { font-size: 1rem; color: var(--text-bright); }
+    .port-card-sub { font-size: 0.63rem; color: var(--text-dim); margin-top: 0.1rem; }
+    .gain { color: var(--accent) !important; }
+    .loss { color: var(--red) !important; }
+    .alloc-section { margin-bottom: 1.2rem; }
+    .alloc-head {
+      font-size: 0.57rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 0.5rem;
+    }
+    .alloc-bar-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; font-size: 0.67rem; }
+    .alloc-ticker { width: 90px; color: var(--text); letter-spacing: 0.03em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .alloc-track { flex: 1; height: 3px; background: var(--bg-hover); }
+    .alloc-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+    .alloc-pct { width: 42px; text-align: right; color: var(--text-dim); font-size: 0.62rem; }
+    /* ── DATA TABLES ─────────────────────────────────────── */
+    .tbl-wrap { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.71rem; min-width: 540px; }
+    .data-table th {
+      font-size: 0.57rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-dim); text-align: left; padding: 0.35rem 0.6rem;
+      border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+      white-space: nowrap; background: var(--bg-panel);
+    }
+    .data-table th:hover { color: var(--text); }
+    .data-table th.sorted { color: var(--accent); }
+    .data-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border-soft); color: var(--text); }
+    .data-table tr:hover td { background: var(--bg-hover); }
+    .col-ticker { color: var(--text-bright) !important; font-weight: 500; letter-spacing: 0.04em; }
+    .col-num { text-align: right !important; font-family: var(--mono); }
+    .col-act { text-align: right !important; white-space: nowrap; }
+    .tbl-act-btn {
+      font-size: 0.6rem; color: var(--text-dim); background: none;
+      border: 1px solid var(--border-soft); padding: 0.1rem 0.35rem;
+      cursor: pointer; font-family: var(--mono); transition: color 0.1s, border-color 0.1s;
+      margin-left: 0.2rem;
+    }
+    .tbl-act-btn:hover { color: var(--red); border-color: var(--red); }
+    .tbl-act-btn.add-btn:hover { color: var(--accent); border-color: var(--accent); }
+    /* ── EMPTY STATE ─────────────────────────────────────── */
+    .empty-state {
+      padding: 4rem 1rem; text-align: center; color: var(--text-dim); font-size: 0.72rem; line-height: 1.8;
+    }
+    .empty-icon { font-size: 1.7rem; opacity: 0.18; margin-bottom: 0.7rem; }
+    /* ── WATCHLIST ───────────────────────────────────────── */
+    .wl-add-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+    /* ── SCREENER ────────────────────────────────────────── */
+    .screener-filters {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      padding: 0.85rem; margin-bottom: 1rem;
+    }
+    .filter-row { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 0.5rem; }
+    .filter-row:last-child { margin-bottom: 0; }
+    .filter-group { display: flex; flex-direction: column; gap: 0.2rem; }
+    .filter-label { font-size: 0.57rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+    .filter-select {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      font-family: var(--mono); font-size: 0.68rem; padding: 0.28rem 0.4rem; outline: none;
+    }
+    .filter-select:focus { border-color: var(--accent); }
+    .filter-input {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text-bright);
+      font-family: var(--mono); font-size: 0.68rem; padding: 0.28rem 0.4rem; width: 80px; outline: none;
+    }
+    .filter-input:focus { border-color: var(--accent); }
+    /* ── SOURCES PAGE ────────────────────────────────────── */
+    .sources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.85rem; }
+    .source-region { background: var(--bg-panel); border: 1px solid var(--border); padding: 0.8rem; }
+    .source-region-head {
+      font-size: 0.57rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 0.55rem; padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .source-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.28rem 0; font-size: 0.71rem; border-bottom: 1px solid var(--border-soft);
+    }
+    .source-item:last-child { border-bottom: none; }
+    .source-item-name { color: var(--text); }
+    .source-item-link { font-size: 0.62rem; color: var(--text-dim); transition: color 0.1s; }
+    .source-item-link:hover { color: var(--accent); }
+    /* ── PRICE BADGE ─────────────────────────────────────── */
+    .p-gain { color: var(--accent); }
+    .p-loss { color: var(--red); }
+    .p-flat { color: var(--text-dim); }
+    @media (max-width: 640px) {
+      .sec-body { padding: 0.75rem; }
+      .port-summary { grid-template-columns: repeat(2, 1fr); }
+      .sources-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -760,6 +912,24 @@
         <span class="sb-count" id="c-saved">0</span>
       </div>
     </div>
+    <div class="sb-section">
+      <div class="sb-item" data-id="portfolio" onclick="showSection('portfolio')">
+        <span class="sb-flag" style="font-size:0.8rem;opacity:0.7">▦</span>
+        <span class="sb-name">portfolio</span>
+      </div>
+      <div class="sb-item" data-id="watchlist" onclick="showSection('watchlist')">
+        <span class="sb-flag" style="font-size:0.8rem;opacity:0.7">◉</span>
+        <span class="sb-name">watchlist</span>
+      </div>
+      <div class="sb-item" data-id="screener" onclick="showSection('screener')">
+        <span class="sb-flag" style="font-size:0.8rem;opacity:0.7">◫</span>
+        <span class="sb-name">screener</span>
+      </div>
+      <div class="sb-item" data-id="sources" onclick="showSection('sources')">
+        <span class="sb-flag" style="font-size:0.8rem;opacity:0.7">◎</span>
+        <span class="sb-name">sources</span>
+      </div>
+    </div>
     <div id="sb-regions"></div>
   </div>
   <div id="main">
@@ -771,6 +941,13 @@
         <button class="f-btn"    id="s-recent" onclick="doSort('recent')">latest</button>
         <button class="f-btn"    id="s-source" onclick="doSort('source')">source</button>
       </div>
+    </div>
+    <div id="news-cat-filter">
+      <button class="cat-chip on" data-nc="all"        onclick="setNewsCat('all')">all</button>
+      <button class="cat-chip"    data-nc="general"    onclick="setNewsCat('general')">general news</button>
+      <button class="cat-chip"    data-nc="investment" onclick="setNewsCat('investment')">investment/vc</button>
+      <button class="cat-chip"    data-nc="asia"       onclick="setNewsCat('asia')">asia</button>
+      <button class="cat-chip"    data-nc="china"      onclick="setNewsCat('china')">china</button>
     </div>
     <div id="articles">
       <div class="state-row"><div class="spinner"></div> fetching feeds…</div>
@@ -790,6 +967,191 @@
       <div>
         <a href="https://guilhermegfmachado.github.io/work" target="_blank" rel="noopener">guilherme machado</a>
       </div>
+    </div>
+
+    <!-- ── PORTFOLIO SECTION ─────────────────────────── -->
+    <div id="sec-portfolio" class="section-panel">
+      <div class="sec-bar">
+        <div class="sec-title">▦ portfolio</div>
+        <div class="sec-info" id="port-info"></div>
+        <div class="sec-ctrls">
+          <button class="f-btn" id="port-refresh-btn" onclick="refreshPortfolioPrices()">↺ refresh</button>
+          <button class="f-btn" onclick="toggleAddForm('port-form')">+ add holding</button>
+        </div>
+      </div>
+      <div class="sec-body" id="port-body">
+        <div class="add-form" id="port-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ticker</label>
+              <input class="form-input" id="pf-ticker" placeholder="e.g. VWCE.AS" style="text-transform:uppercase">
+            </div>
+            <div class="form-group">
+              <label class="form-label">shares</label>
+              <input class="form-input" id="pf-shares" type="number" placeholder="10" min="0" step="any">
+            </div>
+            <div class="form-group">
+              <label class="form-label">avg cost (€)</label>
+              <input class="form-input" id="pf-cost" type="number" placeholder="145.00" min="0" step="any">
+            </div>
+            <div class="form-group">
+              <label class="form-label">date</label>
+              <input class="form-input wide" id="pf-date" type="date">
+            </div>
+            <button class="form-btn primary" onclick="addHolding()">+ add</button>
+            <button class="form-btn" onclick="toggleAddForm('port-form')">cancel</button>
+          </div>
+        </div>
+        <div id="port-summary" class="port-summary"></div>
+        <div class="alloc-section" id="port-alloc"></div>
+        <div class="tbl-wrap">
+          <table class="data-table" id="port-table">
+            <thead>
+              <tr>
+                <th onclick="sortPort('ticker')">ticker</th>
+                <th class="col-num" onclick="sortPort('shares')">shares</th>
+                <th class="col-num" onclick="sortPort('avgCost')">avg cost</th>
+                <th class="col-num" onclick="sortPort('price')">price</th>
+                <th class="col-num" onclick="sortPort('value')">value</th>
+                <th class="col-num" onclick="sortPort('gl')">gain/loss</th>
+                <th class="col-num" onclick="sortPort('glPct')">%</th>
+                <th class="col-act"></th>
+              </tr>
+            </thead>
+            <tbody id="port-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WATCHLIST SECTION ─────────────────────────── -->
+    <div id="sec-watchlist" class="section-panel">
+      <div class="sec-bar">
+        <div class="sec-title">◉ watchlist</div>
+        <div class="sec-info" id="wl-info"></div>
+        <div class="sec-ctrls">
+          <button class="f-btn" onclick="refreshWatchlistPrices()">↺ refresh</button>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="wl-add-row">
+          <input class="form-input wide" id="wl-ticker-in" placeholder="add ticker (e.g. NVO)" style="text-transform:uppercase">
+          <button class="form-btn primary" onclick="addToWatchlist()">+ add</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table" id="wl-table">
+            <thead>
+              <tr>
+                <th onclick="sortWL('ticker')">ticker</th>
+                <th class="col-num" onclick="sortWL('price')">price</th>
+                <th class="col-num" onclick="sortWL('change')">change</th>
+                <th class="col-num" onclick="sortWL('changePct')">change %</th>
+                <th class="col-num">52w low</th>
+                <th class="col-num">52w high</th>
+                <th class="col-act">alerts / actions</th>
+              </tr>
+            </thead>
+            <tbody id="wl-tbody"></tbody>
+          </table>
+        </div>
+        <!-- Alert modal -->
+        <div id="alert-form" class="add-form" style="margin-top:1rem">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ticker</label>
+              <input class="form-input" id="al-ticker" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">target price</label>
+              <input class="form-input" id="al-price" type="number" step="any" placeholder="90.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">direction</label>
+              <select class="filter-select" id="al-dir">
+                <option value="below">below</option>
+                <option value="above">above</option>
+              </select>
+            </div>
+            <button class="form-btn primary" onclick="saveAlert()">set alert</button>
+            <button class="form-btn" onclick="toggleAddForm('alert-form')">cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREENER SECTION ──────────────────────────── -->
+    <div id="sec-screener" class="section-panel">
+      <div class="sec-bar">
+        <div class="sec-title">◫ screener</div>
+        <div class="sec-info" id="scr-info"></div>
+        <div class="sec-ctrls">
+          <button class="f-btn primary" onclick="runScreener()">▸ run</button>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="screener-filters">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label class="filter-label">tickers (comma-separated)</label>
+              <input class="form-input" id="scr-tickers" style="width:380px"
+                placeholder="AAPL, MSFT, VWCE.AS, NVO, 2330.TW" value="AAPL,MSFT,NVDA,NVO,LLY,FCX,VWCE.AS,2330.TW,INDA">
+            </div>
+          </div>
+          <div class="filter-row">
+            <div class="filter-group">
+              <label class="filter-label">market cap</label>
+              <select class="filter-select" id="scr-cap">
+                <option value="">any</option>
+                <option value="large">large (&gt;$10B)</option>
+                <option value="mid">mid ($2B–$10B)</option>
+                <option value="small">small (&lt;$2B)</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">p/e min</label>
+              <input class="filter-input" id="scr-pe-min" type="number" placeholder="0">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">p/e max</label>
+              <input class="filter-input" id="scr-pe-max" type="number" placeholder="100">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">change %</label>
+              <select class="filter-select" id="scr-change">
+                <option value="">any</option>
+                <option value="up">up today</option>
+                <option value="down">down today</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="scr-status" class="sec-info" style="margin-bottom:0.75rem"></div>
+        <div class="tbl-wrap">
+          <table class="data-table" id="scr-table">
+            <thead>
+              <tr>
+                <th>ticker</th>
+                <th>name</th>
+                <th class="col-num">price</th>
+                <th class="col-num">change %</th>
+                <th class="col-num">market cap</th>
+                <th class="col-num">p/e</th>
+                <th class="col-act">actions</th>
+              </tr>
+            </thead>
+            <tbody id="scr-tbody"><tr><td colspan="7" style="padding:2rem;text-align:center;color:var(--text-dim)">set tickers and click ▸ run</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SOURCES SECTION ───────────────────────────── -->
+    <div id="sec-sources" class="section-panel">
+      <div class="sec-bar">
+        <div class="sec-title">◎ sources directory</div>
+        <div class="sec-info">quality investment &amp; markets sites by region</div>
+      </div>
+      <div class="sec-body" id="sources-body"></div>
     </div>
   </div>
   <div id="reader" class="hide">
@@ -944,6 +1306,13 @@ const FEEDS = [
   { id:'worldbank',   cat:'economics', name:'World Bank Blog',        flag:'🌐', cc:'--', lang:'en', region:'Institutional', tags:['institutional'],          notes:'Development economics, poverty, climate finance. Broad global coverage.',                    url:'https://blogs.worldbank.org/rss.xml' },
   { id:'ft-alphaville', cat:'economics', name:'FT Alphaville',        flag:'🇬🇧', cc:'GB', lang:'en', region:'Analysis',    tags:['independent'],            notes:'FT\'s free blog on markets and finance. Sharper and funnier than the main paper.',           url:'https://www.ft.com/rss/alphaville' },
   { id:'ourworlddata', cat:'economics', name:'Our World in Data',     flag:'🌐', cc:'--', lang:'en', region:'Research',     tags:['institutional'],          notes:'Data-driven essays on global development, health, energy. Open access. Reliable.',           url:'https://feeds.feedburner.com/OurWorldInData' },
+  // ── INVESTMENT / VC ────────────────────────────────────────────────────────
+  { id:'techcrunch',   cat:'investment', name:'TechCrunch',           flag:'🇺🇸', cc:'US', lang:'en', region:'VC/Startups',  tags:['independent'],            notes:'Leading tech startup, venture capital, and funding news.',                                   url:'https://techcrunch.com/feed/' },
+  { id:'crunchbase',   cat:'investment', name:'Crunchbase News',      flag:'🇺🇸', cc:'US', lang:'en', region:'VC/Startups',  tags:['independent'],            notes:'Startup funding, M&A, and venture capital intelligence.',                                    url:'https://news.crunchbase.com/feed/' },
+  { id:'dealstreet',   cat:'investment', name:'DealStreetAsia',       flag:'🇸🇬', cc:'SG', lang:'en', region:'Asia',         tags:['independent'],            notes:'Asia-focused PE, VC, and dealmaking. Best on Southeast Asia investment flows.',              url:'https://www.dealstreetasia.com/feed/' },
+  { id:'techinasia',   cat:'investment', name:'Tech in Asia',         flag:'🇸🇬', cc:'SG', lang:'en', region:'Asia',         tags:['independent'],            notes:'Tech startup ecosystem across Asia. Good on Indonesia, SEA, India.',                         url:'https://techinasia.com/feed' },
+  { id:'krasia',       cat:'investment', name:'KrASIA',               flag:'🇸🇬', cc:'SG', lang:'en', region:'Asia',         tags:['independent'],            notes:'Business and tech news from Asia. Strong on China tech and cross-border investment.',         url:'https://kr-asia.com/feed' },
+  { id:'chinadaily',   cat:'investment', name:'China Daily',          flag:'🇨🇳', cc:'CN', lang:'en', region:'China',        tags:['state-funded'],           notes:'Chinese state media in English. Official perspective on Chinese economy and policy.',          url:'https://www.chinadaily.com.cn/rss/china_rss.xml' },
 ];
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const S = {
@@ -955,6 +1324,7 @@ const S = {
   query: '', active: null, counts: {},
   fetchedCats: new Set(),
   cache: {},
+  newsCat: 'all',
 };
 const saveSaved = () => localStorage.setItem('px_saved', JSON.stringify([...S.saved]));
 const saveRead  = () => localStorage.setItem('px_read',  JSON.stringify([...S.read]));
@@ -966,6 +1336,7 @@ function buildSidebar() {
     { id: 'science',     label: 'Science',              icon: '◎' },
     { id: 'humanities',  label: 'Humanities & Culture', icon: '◇' },
     { id: 'economics',   label: 'Economics',            icon: '◫' },
+    { id: 'investment',  label: 'Investment / VC',      icon: '▦' },
   ];
   const worldOrder = ['Europe','Americas','Asia-Pacific','MENA'];
   const vertOrder  = ['Analysis','Journalism','Institutional','Journals',
@@ -1100,7 +1471,7 @@ function refresh() {
   loadCategory('world-news');
 }
 // ─── RENDER ───────────────────────────────────────────────────────────────────
-const CATS = new Set(['world-news','tech','science','humanities','economics']);
+const CATS = new Set(['world-news','tech','science','humanities','economics','investment']);
 function visible() {
   let a = S.articles;
   if (S.feed === 'saved') {
@@ -1111,6 +1482,14 @@ function visible() {
     a = a.filter(x => x.cat === S.feed);
   } else {
     a = a.filter(x => x.feedId === S.feed);
+  }
+  // News category filter
+  if (S.newsCat && S.newsCat !== 'all') {
+    const ASIA_CC = new Set(['JP','KR','CN','HK','SG','IN','TW','MY','TH','ID','PH','VN','AU','NZ']);
+    if (S.newsCat === 'general')    a = a.filter(x => x.cat !== 'investment');
+    else if (S.newsCat === 'investment') a = a.filter(x => x.cat === 'investment');
+    else if (S.newsCat === 'asia')  a = a.filter(x => ASIA_CC.has(x.cc) || x.region === 'Asia-Pacific' || x.region === 'Asia');
+    else if (S.newsCat === 'china') a = a.filter(x => x.cc === 'CN' || x.cc === 'HK' || x.region === 'China');
   }
   if (S.unread) a = a.filter(x => !S.read.has(x.id));
   if (S.query) { const q=S.query.toLowerCase(); a = a.filter(x => x.title.toLowerCase().includes(q)||x.desc.toLowerCase().includes(q)); }
@@ -1183,6 +1562,8 @@ function render() {
 }
 // ─── CONTROLS ────────────────────────────────────────────────────────────────
 function doSelect(id) {
+  // If coming from a section panel, restore news view
+  if (M.currentSection) showNews();
   S.feed = id;
   document.getElementById('sidebar')?.classList.remove('open');
   document.getElementById('sidebar-overlay')?.classList.remove('open');
@@ -1194,7 +1575,7 @@ function doSelect(id) {
   const catLabels = {
     'world-news': 'world news', 'tech': 'technology',
     'science': 'science', 'humanities': 'humanities & culture',
-    'economics': 'economics'
+    'economics': 'economics', 'investment': 'investment / vc'
   };
   if (id === 'all') {
     document.getElementById('feed-name').textContent = 'all sources';
@@ -1403,6 +1784,485 @@ function toggleTheme() {
 initTheme();
 buildSidebar();
 loadCategory('world-news');
+
+// ─── NEWS CATEGORY FILTER ─────────────────────────────────────────────────────
+function setNewsCat(nc) {
+  S.newsCat = nc;
+  document.querySelectorAll('.cat-chip').forEach(el =>
+    el.classList.toggle('on', el.dataset.nc === nc));
+  render();
+}
+
+// ─── SECTION SWITCHING ────────────────────────────────────────────────────────
+const M = {
+  portfolio: JSON.parse(localStorage.getItem('px_portfolio') || '[]'),
+  watchlist: JSON.parse(localStorage.getItem('px_watchlist') || '[]'),
+  alerts:    JSON.parse(localStorage.getItem('px_alerts')    || '[]'),
+  portSort: { col: 'ticker', dir: 1 },
+  prices: {},
+  refreshTimer: null,
+  currentSection: null,
+};
+const savePortfolio = () => localStorage.setItem('px_portfolio', JSON.stringify(M.portfolio));
+const saveWatchlist = () => localStorage.setItem('px_watchlist', JSON.stringify(M.watchlist));
+const saveAlerts    = () => localStorage.setItem('px_alerts',    JSON.stringify(M.alerts));
+
+function showSection(name) {
+  M.currentSection = name;
+  clearInterval(M.refreshTimer);
+  ['feed-bar','news-cat-filter','articles','statusbar','footer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('sec-' + name);
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.id === name));
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebar-overlay')?.classList.remove('open');
+  if (name === 'portfolio') renderPortfolio();
+  else if (name === 'watchlist') renderWatchlist();
+  else if (name === 'screener') renderScreener();
+  else if (name === 'sources') renderSources();
+  if (name === 'portfolio' || name === 'watchlist') {
+    M.refreshTimer = setInterval(() => {
+      if (M.currentSection === 'portfolio') refreshPortfolioPrices();
+      else if (M.currentSection === 'watchlist') refreshWatchlistPrices();
+    }, 60000);
+  }
+}
+function showNews() {
+  M.currentSection = null;
+  clearInterval(M.refreshTimer);
+  ['feed-bar','news-cat-filter','articles','statusbar','footer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+}
+function toggleAddForm(id) {
+  document.getElementById(id)?.classList.toggle('open');
+}
+
+// ─── PRICE FETCHING ───────────────────────────────────────────────────────────
+const priceCache = {};
+async function fetchPrice(ticker) {
+  const key = ticker.toUpperCase();
+  const cached = priceCache[key];
+  if (cached && Date.now() - cached.ts < 300000) return cached.data;
+  const urls = [
+    `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`,
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`,
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const d = await r.json();
+      const result = d.chart?.result?.[0];
+      if (!result) continue;
+      const meta = result.meta;
+      const price = meta.regularMarketPrice ?? meta.previousClose ?? null;
+      const prev  = meta.chartPreviousClose ?? meta.previousClose ?? price;
+      const data  = {
+        price, prevClose: prev,
+        change: price != null && prev != null ? price - prev : null,
+        changePct: price != null && prev ? ((price - prev) / prev) * 100 : null,
+        high52: meta.fiftyTwoWeekHigh ?? null,
+        low52:  meta.fiftyTwoWeekLow  ?? null,
+        currency: meta.currency || 'USD',
+        name: meta.longName || meta.shortName || key,
+      };
+      priceCache[key] = { ts: Date.now(), data };
+      return data;
+    } catch { /* try next */ }
+  }
+  return null;
+}
+async function fetchFundamentals(ticker) {
+  const key = ticker.toUpperCase();
+  const ckey = key + '_fund';
+  const cached = priceCache[ckey];
+  if (cached && Date.now() - cached.ts < 300000) return cached.data;
+  try {
+    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(key)}?modules=price,summaryDetail`;
+    const r = await fetch(url);
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    const res = d.quoteSummary?.result?.[0];
+    if (!res) throw 0;
+    const p = res.price || {}, s = res.summaryDetail || {};
+    const data = {
+      name: p.longName || p.shortName || key,
+      price: p.regularMarketPrice?.raw ?? null,
+      changePct: p.regularMarketChangePercent?.raw != null ? p.regularMarketChangePercent.raw * 100 : null,
+      marketCap: p.marketCap?.raw ?? null,
+      pe: s.trailingPE?.raw ?? null,
+      currency: p.currency || 'USD',
+    };
+    priceCache[ckey] = { ts: Date.now(), data };
+    return data;
+  } catch { return null; }
+}
+
+// ─── FORMATTING HELPERS ───────────────────────────────────────────────────────
+const fmt    = (n, d=2) => n == null ? '—' : n.toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+const fmtSgn = (n, sym='') => n == null ? '—' : (n < 0 ? '-' : '+') + sym + Math.abs(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtPct = n => n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+const fmtCap = n => {
+  if (n == null) return '—';
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(1) + 'T';
+  if (n >= 1e9)  return '$' + (n/1e9).toFixed(1)  + 'B';
+  if (n >= 1e6)  return '$' + (n/1e6).toFixed(1)  + 'M';
+  return '$' + n.toLocaleString();
+};
+const gainCls = n => n == null ? '' : n > 0 ? 'p-gain' : n < 0 ? 'p-loss' : 'p-flat';
+const uuid    = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+// ─── PORTFOLIO ────────────────────────────────────────────────────────────────
+async function renderPortfolio() {
+  const tbody   = document.getElementById('port-tbody');
+  const summary = document.getElementById('port-summary');
+  const alloc   = document.getElementById('port-alloc');
+  if (!M.portfolio.length) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">
+      <div class="empty-icon">▦</div>no holdings yet<br>click "+ add holding" to start</div></td></tr>`;
+    if (summary) summary.innerHTML = '';
+    if (alloc) alloc.innerHTML = '';
+    document.getElementById('port-info').textContent = '0 holdings';
+    return;
+  }
+  const tickers = [...new Set(M.portfolio.map(h => h.ticker))];
+  const priceMap = {};
+  await Promise.all(tickers.map(async t => { priceMap[t] = await fetchPrice(t); }));
+  M.prices = priceMap;
+  _renderPortfolioTable(priceMap);
+}
+function _renderPortfolioTable(priceMap) {
+  const tbody   = document.getElementById('port-tbody');
+  const summary = document.getElementById('port-summary');
+  const alloc   = document.getElementById('port-alloc');
+  if (!tbody || !M.portfolio.length) { renderPortfolio(); return; }
+  let totalValue = 0, totalCost = 0;
+  const rows = M.portfolio.map(h => {
+    const p     = priceMap[h.ticker];
+    const price = p?.price ?? null;
+    const value = price != null ? price * h.shares : null;
+    const cost  = h.avgCost * h.shares;
+    const gl    = value != null ? value - cost : null;
+    const glPct = value != null && cost ? ((value - cost) / cost) * 100 : null;
+    if (value != null) totalValue += value;
+    totalCost += cost;
+    return { ...h, price, value, cost, gl, glPct };
+  });
+  // Sort
+  const { col, dir } = M.portSort;
+  rows.sort((a, b) => {
+    const av = a[col] ?? (dir > 0 ? Infinity : -Infinity);
+    const bv = b[col] ?? (dir > 0 ? Infinity : -Infinity);
+    return (typeof av === 'string' ? av.localeCompare(bv) : av - bv) * dir;
+  });
+  const totalGL    = totalValue - totalCost;
+  const totalGLPct = totalCost ? (totalGL / totalCost) * 100 : 0;
+  summary.innerHTML = `
+    <div class="port-card"><div class="port-card-label">total value</div>
+      <div class="port-card-value">${totalValue ? fmt(totalValue) : '—'}</div></div>
+    <div class="port-card"><div class="port-card-label">total cost</div>
+      <div class="port-card-value">${fmt(totalCost)}</div></div>
+    <div class="port-card"><div class="port-card-label">gain / loss</div>
+      <div class="port-card-value ${gainCls(totalGL)}">${fmtSgn(totalGL)}</div>
+      <div class="port-card-sub ${gainCls(totalGLPct)}">${fmtPct(totalGLPct)}</div></div>
+    <div class="port-card"><div class="port-card-label">holdings</div>
+      <div class="port-card-value">${M.portfolio.length}</div></div>`;
+  // Allocation bars
+  const allocRows = rows.filter(r => r.value != null).sort((a,b) => b.value - a.value);
+  if (totalValue > 0 && allocRows.length) {
+    alloc.innerHTML = `<div class="alloc-head">allocation</div>` +
+      allocRows.map(r => {
+        const pct = (r.value / totalValue) * 100;
+        return `<div class="alloc-bar-row">
+          <span class="alloc-ticker">${r.ticker}</span>
+          <div class="alloc-track"><div class="alloc-fill" style="width:${pct.toFixed(1)}%"></div></div>
+          <span class="alloc-pct">${pct.toFixed(1)}%</span></div>`;
+      }).join('');
+  } else alloc.innerHTML = '';
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td class="col-ticker">${r.ticker}</td>
+    <td class="col-num">${fmt(r.shares)}</td>
+    <td class="col-num">${fmt(r.avgCost)}</td>
+    <td class="col-num">${r.price != null ? fmt(r.price) : '—'}</td>
+    <td class="col-num">${r.value != null ? fmt(r.value) : '—'}</td>
+    <td class="col-num ${gainCls(r.gl)}">${r.gl != null ? fmtSgn(r.gl) : '—'}</td>
+    <td class="col-num ${gainCls(r.glPct)}">${fmtPct(r.glPct)}</td>
+    <td class="col-act">
+      <button class="tbl-act-btn add-btn" onclick="addTickerToWatchlist('${r.ticker}')" title="add to watchlist">◉</button>
+      <button class="tbl-act-btn" onclick="deleteHolding('${r.id}')" title="remove">✕</button>
+    </td></tr>`).join('');
+  document.getElementById('port-info').textContent =
+    `${M.portfolio.length} holdings · ${totalValue ? fmt(totalValue) : '—'}`;
+  document.querySelectorAll('#port-table th').forEach(th => {
+    th.classList.remove('sorted');
+    const oc = th.getAttribute('onclick') || '';
+    if (oc.includes(`'${col}'`)) th.classList.add('sorted');
+  });
+}
+async function refreshPortfolioPrices() {
+  const tickers = [...new Set(M.portfolio.map(h => h.ticker))];
+  tickers.forEach(t => delete priceCache[t.toUpperCase()]);
+  const priceMap = {};
+  await Promise.all(tickers.map(async t => { priceMap[t] = await fetchPrice(t); }));
+  M.prices = priceMap;
+  _renderPortfolioTable(priceMap);
+}
+function sortPort(col) {
+  if (M.portSort.col === col) M.portSort.dir *= -1;
+  else { M.portSort.col = col; M.portSort.dir = 1; }
+  _renderPortfolioTable(M.prices);
+}
+function addHolding() {
+  const ticker = (document.getElementById('pf-ticker').value || '').trim().toUpperCase();
+  const shares = parseFloat(document.getElementById('pf-shares').value);
+  const cost   = parseFloat(document.getElementById('pf-cost').value);
+  const date   = document.getElementById('pf-date').value;
+  if (!ticker || isNaN(shares) || isNaN(cost) || shares <= 0 || cost <= 0) {
+    alert('Please fill ticker, shares, and avg cost.'); return;
+  }
+  M.portfolio.push({ id: uuid(), ticker, shares, avgCost: cost, purchaseDate: date });
+  savePortfolio();
+  ['pf-ticker','pf-shares','pf-cost','pf-date'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  toggleAddForm('port-form');
+  renderPortfolio();
+}
+function deleteHolding(id) {
+  M.portfolio = M.portfolio.filter(h => h.id !== id);
+  savePortfolio();
+  renderPortfolio();
+}
+function addTickerToWatchlist(ticker) {
+  if (!M.watchlist.includes(ticker)) { M.watchlist.push(ticker); saveWatchlist(); }
+}
+
+// ─── WATCHLIST ────────────────────────────────────────────────────────────────
+async function renderWatchlist() {
+  const tbody = document.getElementById('wl-tbody');
+  if (!tbody) return;
+  if (!M.watchlist.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+      <div class="empty-icon">◉</div>no tickers yet<br>type a ticker above and press enter</div></td></tr>`;
+    document.getElementById('wl-info').textContent = '0 tickers';
+    return;
+  }
+  tbody.innerHTML = M.watchlist.map(t =>
+    `<tr id="wl-row-${t.replace('.','_')}"><td class="col-ticker">${t}</td>
+     <td class="col-num" colspan="5"><span class="p-flat">loading…</span></td><td></td></tr>`
+  ).join('');
+  document.getElementById('wl-info').textContent = `${M.watchlist.length} tickers`;
+  await Promise.all(M.watchlist.map(async t => {
+    const p = await fetchPrice(t);
+    _updateWLRow(t, p);
+    _checkAlerts(t, p);
+  }));
+}
+function _updateWLRow(ticker, p) {
+  const rowId = 'wl-row-' + ticker.replace('.','_');
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const alert = M.alerts.find(a => a.ticker === ticker);
+  const alertBadge = alert
+    ? `<span class="src-tag" style="border-color:#f5c54233;color:#f5c542;margin-left:0.3rem">${alert.direction} ${fmt(alert.targetPrice)}</span>` : '';
+  row.innerHTML = `
+    <td class="col-ticker">${ticker}${alertBadge}</td>
+    <td class="col-num">${p?.price != null ? fmt(p.price) : '—'}</td>
+    <td class="col-num ${gainCls(p?.change)}">${p?.change != null ? fmtSgn(p.change) : '—'}</td>
+    <td class="col-num ${gainCls(p?.changePct)}">${fmtPct(p?.changePct)}</td>
+    <td class="col-num">${p?.low52  != null ? fmt(p.low52)  : '—'}</td>
+    <td class="col-num">${p?.high52 != null ? fmt(p.high52) : '—'}</td>
+    <td class="col-act">
+      <button class="tbl-act-btn add-btn" onclick="openAlertForm('${ticker}')" title="set alert">⚑</button>
+      <button class="tbl-act-btn add-btn" onclick="addToPortfolio('${ticker}')" title="add to portfolio">▦</button>
+      <button class="tbl-act-btn" onclick="removeFromWatchlist('${ticker}')" title="remove">✕</button>
+    </td>`;
+}
+function _checkAlerts(ticker, p) {
+  if (!p?.price) return;
+  const al = M.alerts.find(a => a.ticker === ticker);
+  if (!al) return;
+  const triggered = al.direction === 'below' ? p.price <= al.targetPrice : p.price >= al.targetPrice;
+  if (triggered && 'Notification' in window && Notification.permission === 'granted') {
+    new Notification(`活字 — ${ticker} alert`, {
+      body: `${ticker} is ${al.direction} ${fmt(al.targetPrice)} · current: ${fmt(p.price)}`,
+    });
+  }
+}
+async function refreshWatchlistPrices() {
+  M.watchlist.forEach(t => delete priceCache[t.toUpperCase()]);
+  await Promise.all(M.watchlist.map(async t => {
+    const p = await fetchPrice(t);
+    _updateWLRow(t, p);
+    _checkAlerts(t, p);
+  }));
+}
+function addToWatchlist() {
+  const ticker = (document.getElementById('wl-ticker-in').value || '').trim().toUpperCase();
+  if (!ticker) return;
+  if (!M.watchlist.includes(ticker)) { M.watchlist.push(ticker); saveWatchlist(); }
+  document.getElementById('wl-ticker-in').value = '';
+  renderWatchlist();
+}
+function removeFromWatchlist(ticker) {
+  M.watchlist = M.watchlist.filter(t => t !== ticker);
+  M.alerts    = M.alerts.filter(a => a.ticker !== ticker);
+  saveWatchlist(); saveAlerts();
+  renderWatchlist();
+}
+function openAlertForm(ticker) {
+  document.getElementById('al-ticker').value = ticker;
+  document.getElementById('alert-form').classList.add('open');
+  document.getElementById('al-price').focus();
+}
+function saveAlert() {
+  const ticker = document.getElementById('al-ticker').value;
+  const price  = parseFloat(document.getElementById('al-price').value);
+  const dir    = document.getElementById('al-dir').value;
+  if (!ticker || isNaN(price)) return;
+  M.alerts = M.alerts.filter(a => a.ticker !== ticker);
+  M.alerts.push({ ticker, targetPrice: price, direction: dir });
+  saveAlerts();
+  document.getElementById('alert-form').classList.remove('open');
+  if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+  renderWatchlist();
+}
+function addToPortfolio(ticker) {
+  showSection('portfolio');
+  setTimeout(() => {
+    document.getElementById('pf-ticker').value = ticker;
+    document.getElementById('port-form').classList.add('open');
+  }, 50);
+}
+
+// ─── SCREENER ─────────────────────────────────────────────────────────────────
+function renderScreener() {
+  document.getElementById('scr-info').textContent = '';
+}
+async function runScreener() {
+  const raw = document.getElementById('scr-tickers').value;
+  const tickers = raw.split(/[\s,]+/).map(t => t.trim().toUpperCase()).filter(Boolean);
+  if (!tickers.length) return;
+  const capFilter    = document.getElementById('scr-cap').value;
+  const peMin        = parseFloat(document.getElementById('scr-pe-min').value) || null;
+  const peMax        = parseFloat(document.getElementById('scr-pe-max').value) || null;
+  const changeFilter = document.getElementById('scr-change').value;
+  const status = document.getElementById('scr-status');
+  const tbody  = document.getElementById('scr-tbody');
+  status.textContent = `fetching ${tickers.length} tickers…`;
+  tbody.innerHTML = `<tr><td colspan="7" style="padding:1.5rem;text-align:center;color:var(--text-dim)">loading…</td></tr>`;
+  const results = await Promise.all(tickers.map(async t => {
+    const d = await fetchFundamentals(t);
+    return { ticker: t, ...(d || {}) };
+  }));
+  const filtered = results.filter(r => {
+    if (capFilter === 'large' && (r.marketCap == null || r.marketCap < 10e9))  return false;
+    if (capFilter === 'mid'   && (r.marketCap == null || r.marketCap < 2e9 || r.marketCap >= 10e9)) return false;
+    if (capFilter === 'small' && (r.marketCap == null || r.marketCap >= 2e9))  return false;
+    if (peMin != null && r.pe != null && r.pe < peMin) return false;
+    if (peMax != null && r.pe != null && r.pe > peMax) return false;
+    if (changeFilter === 'up'   && r.changePct != null && r.changePct <= 0) return false;
+    if (changeFilter === 'down' && r.changePct != null && r.changePct >= 0) return false;
+    return true;
+  });
+  status.textContent = `${filtered.length} of ${results.length} results`;
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:2rem;text-align:center;color:var(--text-dim)">no results match filters</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(r => `<tr>
+    <td class="col-ticker">${r.ticker}</td>
+    <td style="font-size:0.67rem;color:var(--text-dim);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name||'—'}</td>
+    <td class="col-num">${r.price != null ? fmt(r.price) : '—'}</td>
+    <td class="col-num ${gainCls(r.changePct)}">${fmtPct(r.changePct)}</td>
+    <td class="col-num">${fmtCap(r.marketCap)}</td>
+    <td class="col-num">${r.pe != null ? r.pe.toFixed(1) : '—'}</td>
+    <td class="col-act">
+      <button class="tbl-act-btn add-btn" onclick="addTickerToWatchlist('${r.ticker}');this.textContent='◉ added'" title="watchlist">◉</button>
+      <button class="tbl-act-btn add-btn" onclick="addToPortfolio('${r.ticker}')" title="portfolio">▦</button>
+    </td></tr>`).join('');
+  document.getElementById('scr-info').textContent = `${filtered.length} results`;
+}
+
+// ─── SOURCES DIRECTORY ────────────────────────────────────────────────────────
+function renderSources() {
+  const body = document.getElementById('sources-body');
+  if (!body) return;
+  const regions = [
+    { name:'Global VC / Startups', items:[
+      {name:'TechCrunch',       url:'https://techcrunch.com'},
+      {name:'The Information',  url:'https://theinformation.com'},
+      {name:'Crunchbase News',  url:'https://news.crunchbase.com'},
+      {name:'Sifted',           url:'https://sifted.eu'},
+      {name:'StrictlyVC',       url:'https://strictlyvc.com'},
+    ]},
+    { name:'Asia / APAC', items:[
+      {name:'Tech in Asia',     url:'https://techinasia.com'},
+      {name:'KrASIA',           url:'https://kr-asia.com'},
+      {name:'DealStreetAsia',   url:'https://dealstreetasia.com'},
+      {name:'Rest of World',    url:'https://restofworld.org'},
+      {name:'Nikkei Asia',      url:'https://asia.nikkei.com'},
+    ]},
+    { name:'China', items:[
+      {name:'36Kr (English)',        url:'https://36kr.com/en'},
+      {name:'Pandaily',              url:'https://pandaily.com'},
+      {name:'Caixin Global',         url:'https://caixinglobal.com'},
+      {name:'China Money Network',   url:'https://chinamoneynetwork.com'},
+      {name:'S. China Morning Post', url:'https://scmp.com'},
+    ]},
+    { name:'India', items:[
+      {name:'Inc42',     url:'https://inc42.com'},
+      {name:'YourStory', url:'https://yourstory.com'},
+      {name:'The Ken',   url:'https://the-ken.com'},
+      {name:'Entrackr',  url:'https://entrackr.com'},
+    ]},
+    { name:'Latin America', items:[
+      {name:'Contxto',    url:'https://contxto.com'},
+      {name:'Latam List', url:'https://latamlist.com'},
+    ]},
+    { name:'Middle East / Africa', items:[
+      {name:'Wamda',         url:'https://wamda.com'},
+      {name:'Daily Maverick', url:'https://dailymaverick.co.za'},
+      {name:'Disrupt Africa', url:'https://disruptafrica.com'},
+    ]},
+    { name:'Market Data / Tools', items:[
+      {name:'Finviz',        url:'https://finviz.com'},
+      {name:'TradingView',   url:'https://tradingview.com'},
+      {name:'Koyfin',        url:'https://koyfin.com'},
+      {name:'WhaleWisdom',   url:'https://whalewisdom.com'},
+      {name:'Macrotrends',   url:'https://macrotrends.net'},
+      {name:'TIKR',          url:'https://tikr.com'},
+    ]},
+    { name:'Research / Macro', items:[
+      {name:'Our World in Data',    url:'https://ourworldindata.org'},
+      {name:'World Bank Open Data', url:'https://data.worldbank.org'},
+      {name:'Project Syndicate',    url:'https://project-syndicate.org'},
+      {name:'VoxEU',                url:'https://cepr.org/voxeu'},
+      {name:'IMF Blog',             url:'https://imf.org/en/Blogs'},
+    ]},
+  ];
+  body.innerHTML = `<div class="sources-grid">` +
+    regions.map(r => `<div class="source-region">
+      <div class="source-region-head">${r.name}</div>
+      ${r.items.map(i => `<div class="source-item">
+        <span class="source-item-name">${i.name}</span>
+        <a class="source-item-link" href="${i.url}" target="_blank" rel="noopener">↗ ${i.url.replace('https://','')}</a>
+      </div>`).join('')}
+    </div>`).join('') + `</div>`;
+}
+
+// Watchlist enter key
+document.getElementById('wl-ticker-in').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addToWatchlist();
+});
 </script>
 </body>
 </html>
