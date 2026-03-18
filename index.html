@@ -353,6 +353,13 @@
       animation: spin 0.65s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes stat-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.8} }
+    .stat-loading::after {
+      content: '···';
+      display: inline-block;
+      animation: stat-pulse 1.2s ease-in-out infinite;
+      letter-spacing: 0.05em;
+    }
     #empty {
       padding: 5rem 1rem; text-align: center;
       color: var(--text-dim); font-size: 0.72rem;
@@ -471,7 +478,16 @@
     }
     #r-xlated.show { display: block; }
     /* ── RESPONSIVE ──────────────────────────────────────── */
-    @media (max-width: 960px) { #reader { display: none !important; } }
+    @media (max-width: 960px) {
+      #reader { display: none; }
+      #reader.show-mobile {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        z-index: 200;
+      }
+    }
 
     #mob-toggle {
       display: none;
@@ -499,6 +515,7 @@
       #pulse { display: none; }
       #updated { display: none; }
       #btn-unread { display: none; }
+      #btn-mark-read { display: none; }
       #btn-compact { display: none; }
       #btn-refresh { display: none; }
       #search-wrap { max-width: none; }
@@ -589,144 +606,6 @@
       transition: color 0.1s, border-color 0.1s;
     }
     #r-save-btn:hover, #r-save-btn.saved { color: var(--accent); border-color: var(--accent); }
-    /* ── ARTICLE MODAL (mobile) ──────────────────────────── */
-    #article-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      background: var(--bg-panel);
-      flex-direction: column;
-      overflow: hidden;
-    }
-    #article-modal.open {
-      display: flex;
-    }
-    #modal-top {
-      height: 44px;
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 1rem;
-      gap: 0.6rem;
-    }
-    #modal-close {
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      padding: 0.25rem 0.6rem;
-      min-height: 32px;
-      display: flex;
-      align-items: center;
-    }
-    #modal-close:hover { color: var(--accent); border-color: var(--accent); }
-    #modal-open {
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      padding: 0.25rem 0.6rem;
-      min-height: 32px;
-      display: flex;
-      align-items: center;
-      margin-left: auto;
-    }
-    #modal-open:hover { color: var(--accent); border-color: var(--accent); }
-    #modal-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.25rem 1.1rem;
-      -webkit-overflow-scrolling: touch;
-    }
-    #modal-source {
-      font-size: 0.68rem;
-      color: var(--text-dim);
-      margin-bottom: 0.65rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    #modal-src { color: var(--accent); }
-    #modal-title {
-      font-family: var(--sans);
-      font-size: 1.15rem;
-      font-weight: 300;
-      color: var(--text-bright);
-      line-height: 1.45;
-      margin-bottom: 0.75rem;
-    }
-    #modal-date {
-      font-size: 0.65rem;
-      color: var(--text-dim);
-      margin-bottom: 1rem;
-      padding-bottom: 0.9rem;
-      border-bottom: 1px solid var(--border-soft);
-    }
-    #modal-desc {
-      font-family: var(--sans);
-      font-size: 0.92rem;
-      font-weight: 300;
-      color: var(--text);
-      line-height: 1.85;
-      margin-bottom: 1.25rem;
-    }
-    #modal-excerpt-note {
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      border: 1px solid var(--border-soft);
-      padding: 0.6rem 0.75rem;
-      line-height: 1.55;
-      margin-bottom: 1.1rem;
-    }
-    #modal-excerpt-note a { color: var(--accent); }
-    #modal-xlate-wrap {
-      margin-top: 0.5rem;
-    }
-    #modal-xlate-btn {
-      font-size: 0.72rem;
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      padding: 0.25rem 0.6rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      min-height: 32px;
-    }
-    #modal-xlate-btn:hover { color: var(--accent); border-color: var(--accent); }
-    #modal-xlated {
-      margin-top: 0.7rem;
-      font-family: var(--sans);
-      font-size: 0.88rem;
-      font-weight: 300;
-      color: var(--text);
-      line-height: 1.85;
-      display: none;
-    }
-    #modal-xlated.show { display: block; }
-    #modal-src-notes {
-      margin-top: 1.25rem;
-      padding-top: 0.9rem;
-      border-top: 1px solid var(--border-soft);
-    }
-    #modal-src-notes-head {
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      opacity: 0.5;
-      margin-bottom: 0.35rem;
-    }
-    #modal-src-notes-text {
-      font-size: 0.72rem;
-      color: var(--text-dim);
-      line-height: 1.55;
-    }
-    #modal-src-tags {
-      display: flex;
-      gap: 0.3rem;
-      flex-wrap: wrap;
-      margin-top: 0.45rem;
-    }
     /* ── NEWS CATEGORY FILTER ────────────────────────────── */
     #news-cat-filter {
       display: flex; gap: 0.35rem; align-items: center;
@@ -870,6 +749,41 @@
     .source-item-name { color: var(--text); }
     .source-item-link { font-size: 0.62rem; color: var(--text-dim); transition: color 0.1s; }
     .source-item-link:hover { color: var(--accent); }
+    /* ── SHORTCUTS OVERLAY ───────────────────────────────── */
+    #shortcuts-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.55);
+      align-items: center;
+      justify-content: center;
+    }
+    #shortcuts-overlay.show { display: flex; }
+    #shortcuts-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      padding: 1.1rem 1.4rem;
+      min-width: 240px;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+    #shortcuts-box h4 {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      opacity: 0.5;
+      margin-bottom: 0.55rem;
+      font-weight: 400;
+    }
+    .sc-row { display: flex; gap: 1rem; justify-content: space-between; }
+    .sc-key {
+      color: var(--text-bright);
+      font-family: var(--mono);
+      min-width: 28px;
+    }
     /* ── PRICE BADGE ─────────────────────────────────────── */
     .p-gain { color: var(--accent); }
     .p-loss { color: var(--red); }
@@ -893,6 +807,7 @@
     <div id="updated">—</div>
     <button class="t-btn" id="btn-refresh" onclick="doRefresh()">↺ refresh</button>
     <button class="t-btn" id="btn-unread" onclick="toggleUnread()">unread</button>
+    <button class="t-btn" id="btn-mark-read" onclick="markAllRead()" title="mark visible articles as read">mark read</button>
     <button class="t-btn" id="btn-compact" onclick="toggleCompact()">compact</button>
     <button class="t-btn" id="btn-theme" onclick="toggleTheme()" title="toggle light/dark">◑</button>
   </div>
@@ -934,7 +849,7 @@
   </div>
   <div id="main">
     <div id="feed-bar">
-      <div id="feed-name">all sources</div>
+      <div id="feed-name"></div>
       <div id="feed-info">loading…</div>
       <div id="feed-ctrls">
         <button class="f-btn on" id="s-mixed"  onclick="doSort('mixed')">mixed</button>
@@ -953,9 +868,9 @@
       <div class="state-row"><div class="spinner"></div> fetching feeds…</div>
     </div>
     <div id="statusbar">
-      <div>articles <span id="st-a">—</span></div>
-      <div>sources <span id="st-s">—</span></div>
-      <div>languages <span id="st-l">—</span></div>
+      <div>articles <span id="st-a" class="stat-loading"></span></div>
+      <div>sources <span id="st-s" class="stat-loading"></span></div>
+      <div>languages <span id="st-l" class="stat-loading"></span></div>
       <div>read <span id="st-r">0</span></div>
     </div>
     <div id="footer">
@@ -1183,40 +1098,25 @@
       </div>
     </div>
   </div>
+  <!-- SHORTCUTS OVERLAY -->
+  <div id="shortcuts-overlay" onclick="toggleShortcuts()">
+    <div id="shortcuts-box" onclick="event.stopPropagation()">
+      <h4>keyboard shortcuts</h4>
+      <div class="sc-row"><span class="sc-key">j / ↓</span><span>next article</span></div>
+      <div class="sc-row"><span class="sc-key">k / ↑</span><span>previous article</span></div>
+      <div class="sc-row"><span class="sc-key">o</span><span>open in new tab</span></div>
+      <div class="sc-row"><span class="sc-key">s</span><span>save / unsave</span></div>
+      <div class="sc-row"><span class="sc-key">u</span><span>toggle unread filter</span></div>
+      <div class="sc-row"><span class="sc-key">r</span><span>refresh feeds</span></div>
+      <div class="sc-row"><span class="sc-key">/ </span><span>focus search</span></div>
+      <div class="sc-row"><span class="sc-key">?</span><span>show / hide this</span></div>
+    </div>
+  </div>
   <!-- TOOLTIP (shared, positioned by JS) -->
   <div id="src-tooltip" class="src-tooltip">
     <div class="src-tooltip-name" id="tt-name"></div>
     <div class="src-tooltip-tags" id="tt-tags"></div>
     <div id="tt-notes"></div>
-  </div>
-</div>
-<!-- ARTICLE MODAL — shown on mobile instead of reader panel -->
-<div id="article-modal">
-  <div id="modal-top">
-    <button id="modal-close" onclick="closeModal()">✕ back</button>
-    <button id="modal-open" onclick="openModalLink()">↗ full article</button>
-  </div>
-  <div id="modal-body">
-    <div id="modal-source">
-      <span id="modal-flag"></span>
-      <span id="modal-src"></span>
-      <span id="modal-time"></span>
-    </div>
-    <div id="modal-title"></div>
-    <div id="modal-date"></div>
-    <div id="modal-desc"></div>
-    <div id="modal-excerpt-note">
-      RSS excerpt only. <a id="modal-full-link" href="#" target="_blank" rel="noopener">Read the full article ↗</a>
-    </div>
-    <div id="modal-xlate-wrap" style="display:none">
-      <button id="modal-xlate-btn" onclick="translateModal()">⟳ translate to english</button>
-      <div id="modal-xlated"></div>
-    </div>
-    <div id="modal-src-notes">
-      <div id="modal-src-notes-head">about this source</div>
-      <div id="modal-src-notes-text"></div>
-      <div id="modal-src-tags"></div>
-    </div>
   </div>
 </div>
 <script>
@@ -1306,6 +1206,11 @@ const FEEDS = [
   { id:'worldbank',   cat:'economics', name:'World Bank Blog',        flag:'🌐', cc:'--', lang:'en', region:'Institutional', tags:['institutional'],          notes:'Development economics, poverty, climate finance. Broad global coverage.',                    url:'https://blogs.worldbank.org/rss.xml' },
   { id:'ft-alphaville', cat:'economics', name:'FT Alphaville',        flag:'🇬🇧', cc:'GB', lang:'en', region:'Analysis',    tags:['independent'],            notes:'FT\'s free blog on markets and finance. Sharper and funnier than the main paper.',           url:'https://www.ft.com/rss/alphaville' },
   { id:'ourworlddata', cat:'economics', name:'Our World in Data',     flag:'🌐', cc:'--', lang:'en', region:'Research',     tags:['institutional'],          notes:'Data-driven essays on global development, health, energy. Open access. Reliable.',           url:'https://feeds.feedburner.com/OurWorldInData' },
+  { id:'caixin',      cat:'economics', name:'Caixin Global',          flag:'🇨🇳', cc:'CN', lang:'en', region:'Asia-Pacific', tags:['independent'],            notes:'China\'s most credible independent business journalism in English.',                         url:'https://www.caixinglobal.com/rss/search/?keywords=&channelList=business' },
+  { id:'valor',       cat:'economics', name:'Valor Econômico',        flag:'🇧🇷', cc:'BR', lang:'pt', region:'Americas',     tags:['independent'],            notes:'Brazil\'s leading financial daily. Essential for Latin American markets.',                  url:'https://valor.globo.com/rss/home/valor_economico.xml' },
+  { id:'eleconomista',cat:'economics', name:'El Economista',          flag:'🇪🇸', cc:'ES', lang:'es', region:'Europe',       tags:['independent'],            notes:'Spain\'s financial daily. Strong on Ibero-American economics.',                             url:'https://www.eleconomista.es/rss/rss.php?idSector=37' },
+  { id:'unctad',      cat:'economics', name:'UNCTAD',                 flag:'🌐', cc:'--', lang:'en', region:'Institutional', tags:['institutional'],          notes:'UN trade and development. Genuinely Global South economic perspective.',                    url:'https://unctad.org/news/rss.xml' },
+  { id:'africabiz',   cat:'economics', name:'Africa Business',        flag:'🌍', cc:'--', lang:'en', region:'Africa',        tags:['independent'],            notes:'Sub-Saharan business and investment. Completely absent from most aggregators.',              url:'https://africabusiness.com/feed/' },
   // ── INVESTMENT / VC ────────────────────────────────────────────────────────
   { id:'techcrunch',   cat:'investment', name:'TechCrunch',           flag:'🇺🇸', cc:'US', lang:'en', region:'VC/Startups',  tags:['independent'],            notes:'Leading tech startup, venture capital, and funding news.',                                   url:'https://techcrunch.com/feed/' },
   { id:'crunchbase',   cat:'investment', name:'Crunchbase News',      flag:'🇺🇸', cc:'US', lang:'en', region:'VC/Startups',  tags:['independent'],            notes:'Startup funding, M&A, and venture capital intelligence.',                                    url:'https://news.crunchbase.com/feed/' },
@@ -1320,7 +1225,8 @@ const S = {
   saved: new Set(JSON.parse(localStorage.getItem('px_saved') || '[]')),
   read:  new Set(JSON.parse(localStorage.getItem('px_read')  || '[]')),
   feed: 'all', sort: 'mixed',
-  unread: false, compact: false,
+  unread: localStorage.getItem('huozi-unread') === 'true',
+  compact: localStorage.getItem('huozi-compact') === 'true',
   query: '', active: null, counts: {},
   fetchedCats: new Set(),
   cache: {},
@@ -1578,7 +1484,7 @@ function doSelect(id) {
     'economics': 'economics', 'investment': 'investment / vc'
   };
   if (id === 'all') {
-    document.getElementById('feed-name').textContent = 'all sources';
+    document.getElementById('feed-name').textContent = '';
     document.getElementById('feed-info').textContent =
       `${S.articles.length} articles · ${FEEDS.length} sources`;
   } else if (id === 'saved') {
@@ -1605,10 +1511,15 @@ function doSort(s) {
   document.getElementById('s-source').classList.toggle('on', s==='source');
   render();
 }
-function toggleUnread()  { S.unread=!S.unread;  document.getElementById('btn-unread').classList.toggle('on',S.unread);  render(); }
-function toggleCompact() { S.compact=!S.compact; document.getElementById('btn-compact').classList.toggle('on',S.compact); render(); }
+function markAllRead() {
+  visible().forEach(a => S.read.add(a.id));
+  saveRead(); updateStats(); render();
+}
+function toggleUnread()  { S.unread=!S.unread;  localStorage.setItem('huozi-unread',S.unread);  document.getElementById('btn-unread').classList.toggle('on',S.unread);  render(); }
+function toggleCompact() { S.compact=!S.compact; localStorage.setItem('huozi-compact',S.compact); document.getElementById('btn-compact').classList.toggle('on',S.compact); render(); }
 function doRefresh() { refresh(); }
 function updateStats() {
+  ['st-a','st-s','st-l'].forEach(id => document.getElementById(id).classList.remove('stat-loading'));
   document.getElementById('st-a').textContent = S.articles.length;
   document.getElementById('st-s').textContent = new Set(S.articles.map(a=>a.feedId)).size;
   document.getElementById('st-l').textContent = new Set(S.articles.map(a=>a.lang)).size;
@@ -1643,7 +1554,8 @@ function openReader(id) {
     el.classList.toggle('active', el.dataset.id===id);
     if (el.dataset.id===id) el.classList.remove('read');
   });
-  if (window.innerWidth <= 640) { openModal(a); return; }
+  const readerEl = document.getElementById('reader');
+  if (window.innerWidth <= 960) readerEl.classList.add('show-mobile');
   document.getElementById('r-flag').textContent = a.flag;
   document.getElementById('r-src').textContent  = a.name;
   document.getElementById('r-time').textContent = ' · '+ago(a.date);
@@ -1672,44 +1584,13 @@ function openReader(id) {
   document.getElementById('reader').classList.remove('hide');
 }
 function closeReader() {
-  document.getElementById('reader').classList.add('hide'); S.active=null;
+  const r = document.getElementById('reader');
+  r.classList.add('hide');
+  r.classList.remove('show-mobile');
+  S.active=null;
   document.querySelectorAll('.article.active').forEach(el => el.classList.remove('active'));
 }
 function openLink() { const a=S.articles.find(x=>x.id===S.active); if(a) window.open(a.link,'_blank','noopener'); }
-// ─── MOBILE MODAL ────────────────────────────────────────────────────────────
-function openModal(a) {
-  document.getElementById('modal-flag').textContent = a.flag;
-  document.getElementById('modal-src').textContent  = a.name;
-  document.getElementById('modal-time').textContent = ' · '+ago(a.date);
-  document.getElementById('modal-title').textContent = a.title;
-  document.getElementById('modal-date').textContent  = new Date(a.date).toLocaleString();
-  document.getElementById('modal-desc').textContent  = a.desc||'—';
-  document.getElementById('modal-xlated').className = '';
-  document.getElementById('modal-xlated').textContent = '';
-  document.getElementById('modal-xlate-btn').textContent = '⟳ translate to english';
-  document.getElementById('modal-xlate-wrap').style.display = a.lang!=='en' ? '' : 'none';
-  document.getElementById('modal-full-link').href = a.link;
-  const feed = FEEDS.find(f => f.id === a.feedId);
-  document.getElementById('modal-src-notes-text').textContent = feed?.notes || '';
-  document.getElementById('modal-src-tags').innerHTML = (feed?.tags||[]).map(t =>
-    `<span class="src-tag ${t}">${t}</span>`
-  ).join('');
-  document.getElementById('article-modal').classList.add('open');
-}
-function closeModal() {
-  document.getElementById('article-modal').classList.remove('open');
-  S.active = null;
-  document.querySelectorAll('.article.active').forEach(el => el.classList.remove('active'));
-}
-function openModalLink() { const a=S.articles.find(x=>x.id===S.active); if(a) window.open(a.link,'_blank','noopener'); }
-async function translateModal() {
-  const a=S.articles.find(x=>x.id===S.active); if(!a) return;
-  const btn=document.getElementById('modal-xlate-btn');
-  btn.textContent='⟳ translating…';
-  const res=await xlate(a.title+'\n\n'+a.desc, a.lang);
-  if (res) { document.getElementById('modal-xlated').textContent=res; document.getElementById('modal-xlated').className='show'; btn.textContent='✓ translated'; }
-  else btn.textContent='✗ failed';
-}
 // ─── TRANSLATION ─────────────────────────────────────────────────────────────
 async function xlate(text, from='auto') {
   try {
@@ -1763,9 +1644,37 @@ function hideTooltip() {
 // ─── KEYBOARD ─────────────────────────────────────────────────────────────────
 const searchEl = document.getElementById('search');
 searchEl.addEventListener('input', e => { S.query=e.target.value.trim(); render(); });
+function noInput() {
+  const t = document.activeElement?.tagName;
+  return t !== 'INPUT' && t !== 'TEXTAREA' && t !== 'SELECT';
+}
+function toggleShortcuts() {
+  document.getElementById('shortcuts-overlay').classList.toggle('show');
+}
+function navArticle(dir) {
+  const list = visible();
+  if (!list.length) return;
+  const idx = S.active ? list.findIndex(a => a.id === S.active) : -1;
+  const next = list[Math.max(0, Math.min(list.length - 1, idx + dir))];
+  if (next) openReader(next.id);
+}
 document.addEventListener('keydown', e => {
-  if (e.key==='/' && document.activeElement!==searchEl) { e.preventDefault(); searchEl.focus(); }
-  if (e.key==='Escape') { if(document.activeElement===searchEl) searchEl.blur(); else { closeModal(); closeReader(); } }
+  if (e.key==='/' && document.activeElement!==searchEl) { e.preventDefault(); searchEl.focus(); return; }
+  if (e.key==='Escape') {
+    if (document.activeElement===searchEl) { searchEl.blur(); return; }
+    if (document.getElementById('shortcuts-overlay').classList.contains('show')) { toggleShortcuts(); return; }
+    closeReader(); return;
+  }
+  if (!noInput()) return;
+  switch(e.key) {
+    case 'j': case 'ArrowDown': e.preventDefault(); navArticle(1);  break;
+    case 'k': case 'ArrowUp':   e.preventDefault(); navArticle(-1); break;
+    case 'o': if (S.active) openLink(); break;
+    case 's': if (S.active) toggleSave(S.active); break;
+    case 'u': toggleUnread(); break;
+    case 'r': doRefresh(); break;
+    case '?': toggleShortcuts(); break;
+  }
 });
 // ─── THEME ────────────────────────────────────────────────────────────────────
 function initTheme() {
@@ -1783,6 +1692,9 @@ function toggleTheme() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 initTheme();
 buildSidebar();
+document.getElementById('feed-name').textContent = '';
+document.getElementById('btn-unread').classList.toggle('on', S.unread);
+document.getElementById('btn-compact').classList.toggle('on', S.compact);
 loadCategory('world-news');
 
 // ─── NEWS CATEGORY FILTER ─────────────────────────────────────────────────────
