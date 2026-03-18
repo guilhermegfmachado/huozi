@@ -770,18 +770,12 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 /* ── SORT LABEL ──────────────────────────────────────── */
 #sort-label { font-size: 0.6rem; color: var(--text-dim); flex-shrink: 0; letter-spacing: 0.04em; }
 /* ── SIDEBAR MODE BAR ────────────────────────────────── */
-.sb-mode-bar {
-  display: flex; align-items: center; padding: 0.3rem 0.7rem;
-  border-bottom: 1px solid var(--border-soft);
-  font-size: 0.57rem; color: var(--text-dim);
-  letter-spacing: 0.1em; text-transform: uppercase;
-}
-#sb-mode-toggle {
+.sb-dir-btn {
   margin-left: auto; font-size: 0.57rem; color: var(--text-dim);
   border: 1px solid var(--border); padding: 0.1rem 0.35rem;
-  transition: color 0.1s, border-color 0.1s;
+  transition: color 0.1s, border-color 0.1s; flex-shrink: 0;
 }
-#sb-mode-toggle:hover, #sb-mode-toggle.active { color: var(--accent); border-color: var(--accent); }
+.sb-dir-btn:hover, .sb-dir-btn.active { color: var(--accent); border-color: var(--accent); }
 #sb-filter-content, #sb-directory-content { display: block; }
 /* ── DIRECTORY MODE ──────────────────────────────────── */
 .dir-region-head {

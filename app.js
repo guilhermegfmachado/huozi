@@ -28,13 +28,13 @@ function relativeTime(date) {
   const ms = Date.now() - date.getTime();
   const min = ms / 60000;
   const hr  = ms / 3600000;
-  if (min < 60) return Math.max(1, Math.floor(min)) + ' min ago';
-  if (hr  < 24) return Math.floor(hr) + ' hr ago';
+  if (min < 60) return Math.max(1, Math.floor(min)) + 'm ago';
+  if (hr  < 24) return Math.floor(hr) + 'h ago';
   const d0 = new Date(); d0.setHours(0,0,0,0);
   const d1 = new Date(date); d1.setHours(0,0,0,0);
   const dayDiff = Math.round((d0 - d1) / 86400000);
   if (dayDiff === 1) return 'yesterday';
-  if (dayDiff <= 6) return dayDiff + ' days ago';
+  if (dayDiff <= 6) return dayDiff + 'd ago';
   const curYear = new Date().getFullYear();
   const label = date.getDate() + ' ' + MONTHS[date.getMonth()];
   return date.getFullYear() === curYear ? label : label + ' ' + date.getFullYear();
@@ -137,28 +137,34 @@ function getHomepage(url) {
 }
 function renderDirectoryMode() {
   const body = document.getElementById('sb-directory-content');
-  const allRegions = {};
-  for (const f of FEEDS) (allRegions[f.region] = allRegions[f.region] || []).push(f);
-  const editorialOrder = ['wire', 'independent', 'state-funded'];
-  body.innerHTML = Object.entries(allRegions).map(([region, feeds]) => `
+  const GEO_REGIONS = ['Europe', 'Americas', 'Asia-Pacific', 'MENA', 'Africa'];
+  // Only world-news feeds with geographic regions
+  const byRegion = {};
+  for (const f of FEEDS.filter(f => GEO_REGIONS.includes(f.region)))
+    (byRegion[f.region] = byRegion[f.region] || []).push(f);
+  const editorialOrder = ['wire', 'independent', 'state-funded', 'longform'];
+  body.innerHTML = GEO_REGIONS.filter(r => byRegion[r]).map(region => `
     <div class="dir-region-head">${region}</div>
-    ${feeds.map(f => {
+    ${byRegion[region].map(f => {
       const editorial = (f.tags || []).find(t => editorialOrder.includes(t)) || '';
       const homepage = getHomepage(f.url);
-      const tz = tzLabel(f.cc);
-      return `<div class="dir-card" onclick="window.open('${homepage}','_blank','noopener')">
+      return `<div class="dir-card" onclick="dirCardClick('${f.id}')">
         <div class="dir-card-top">
           <span class="dir-flag">${f.flag}</span>
-          <span class="dir-name">${f.name}</span>
-          ${f.lang !== 'en' ? `<span class="dir-lang">${f.lang}</span>` : ''}
+          <span class="dir-name">${esc(f.name)}</span>
+          <span class="dir-lang">${f.lang}</span>
           ${editorial ? `<span class="dir-tag ${editorial}">${editorial}</span>` : ''}
-          ${tz ? `<span class="dir-tz">${tz}</span>` : ''}
           <a class="dir-link" href="${homepage}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>
         </div>
-        ${f.notes ? `<span class="dir-notes">${f.notes}</span>` : ''}
+        ${f.notes ? `<span class="dir-notes">${esc(f.notes)}</span>` : ''}
       </div>`;
     }).join('')}
   `).join('');
+}
+function dirCardClick(feedId) {
+  // Switch back to filter mode, then select the source
+  if (sidebarMode === 'directory') toggleSidebarMode();
+  doSelect(feedId);
 }
 function toggleCatSection(catId) {
   const feeds = document.getElementById('cf-' + catId);
