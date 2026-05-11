@@ -88,7 +88,7 @@ function buildSidebar() {
                 ${f.notes ? `<button class="sb-info-btn"
                   onmouseenter="showTooltip(event,'${f.id}')"
                   onmouseleave="hideTooltip()"
-                  onclick="event.stopPropagation()">?</button>` : ''}
+                  onclick="event.stopPropagation();showTooltip(event,'${f.id}')">?</button>` : ''}
                 <span class="sb-count" id="c-${f.id}">·</span>
               </div>`).join('')}
           `).join('')}
@@ -427,6 +427,7 @@ function toggleSavedDropdown(e) {
 document.addEventListener('click', () => {
   const dd = document.getElementById('saved-dropdown');
   if (dd) dd.style.display = 'none';
+  hideTooltip();
 });
 function toggleSave(id) {
   if (S.saved.has(id)) { S.saved.delete(id); } else { S.saved.add(id); }
