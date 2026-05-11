@@ -317,10 +317,11 @@ function render() {
     const langBadge = a.lang !== 'en'
       ? `<span class="a-lang">${a.lang}</span>` : '';
     const xlateAction = a.lang !== 'en'
-      ? `<button class="a-action-btn" onclick="event.stopPropagation();inlineXlate(this,'${esc(a.title)}','${a.lang}')">⟳ translate</button>` : '';
+      ? `<button class="a-action-btn" data-title="${esc(a.title)}" data-lang="${a.lang}"
+           onclick="event.stopPropagation();inlineXlate(this,this.dataset.title,this.dataset.lang)">⟳ translate</button>` : '';
     return `<div class="article${S.read.has(a.id)?' read':''}${S.active===a.id?' active':''}"
                  data-id="${esc(a.id)}"
-                 onclick="openReader('${esc(a.id)}')">
+                 onclick="openReader(this.dataset.id)">
       <div class="a-meta">
         <span class="a-cc">${esc(a.cc||'--')}</span>
         <span class="a-src">${esc(a.name)}</span>
@@ -334,7 +335,7 @@ function render() {
       <div class="a-desc">${esc(a.desc)}</div>
       <div class="a-actions">
         <button class="a-action-btn${isSaved?' saved':''}"
-          onclick="event.stopPropagation();toggleSave('${esc(a.id)}')">${isSaved?'◆ saved':'◇ save'}</button>
+          onclick="event.stopPropagation();toggleSave(this.closest('[data-id]').dataset.id)">${isSaved?'◆ saved':'◇ save'}</button>
         <span class="a-dot">·</span>
         <a class="a-open-link" href="${esc(a.link)}" target="_blank" rel="noopener"
           onclick="event.stopPropagation()">↗ open</a>
@@ -414,7 +415,7 @@ function toggleSavedDropdown(e) {
   const savedArticles = S.articles.filter(a => S.saved.has(a.id));
   if (!savedArticles.length) return;
   dd.innerHTML = savedArticles.map(a =>
-    `<div class="saved-dd-item" onclick="event.stopPropagation();openReader('${esc(a.id)}');document.getElementById('saved-dropdown').style.display='none'">${esc(a.title)}</div>`
+    `<div class="saved-dd-item" data-id="${esc(a.id)}" onclick="event.stopPropagation();openReader(this.dataset.id);document.getElementById('saved-dropdown').style.display='none'">${esc(a.title)}</div>`
   ).join('');
   const rect = document.getElementById('c-saved').getBoundingClientRect();
   const ddW = 260;
