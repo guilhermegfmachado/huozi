@@ -35,6 +35,7 @@
       <div class="sb-item active" data-id="all" onclick="doSelect('all')">
         <span class="sb-flag" style="font-size:0.85rem;opacity:0.7">活</span>
         <span class="sb-name">all sources</span>
+        <button id="sb-mode-toggle" class="sb-dir-btn" onclick="event.stopPropagation();toggleSidebarMode()">⊞ directory</button>
         <span class="sb-count" id="c-all">—</span>
       </div>
       <div class="sb-item" data-id="saved" onclick="doSelect('saved')">
@@ -61,10 +62,6 @@
         <span class="sb-flag" style="font-size:0.8rem;opacity:0.7">◎</span>
         <span class="sb-name">sources</span>
       </div>
-    </div>
-    <div class="sb-mode-bar">
-      <span>feeds</span>
-      <button id="sb-mode-toggle" onclick="toggleSidebarMode()">⊞ directory</button>
     </div>
     <div id="sb-filter-content">
       <div id="sb-regions"></div>
@@ -106,6 +103,8 @@
       </div>
       <div>
         <a href="https://guilhermegfmachado.github.io/work" target="_blank" rel="noopener">guilherme machado</a>
+        <span class="footer-sep">—</span>
+        <a href="https://guilhermegfmachado.github.io/aleph/" target="_blank" rel="noopener">→ aleph</a>
       </div>
     </div>
 

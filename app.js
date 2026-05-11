@@ -17,6 +17,59 @@ const saveSaved = () => localStorage.setItem('px_saved', JSON.stringify([...S.sa
 const saveRead  = () => localStorage.setItem('px_read',  JSON.stringify([...S.read]));
 // ─── UTILITY ─────────────────────────────────────────────────────────────────
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// ─── DATE HELPERS ─────────────────────────────────────────────────────────────
+function parseDate(str) {
+  if (!str) return null;
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function relativeTime(date) {
+  const ms = Date.now() - date.getTime();
+  const min = ms / 60000;
+  const hr  = ms / 3600000;
+  if (min < 60) return Math.max(1, Math.floor(min)) + 'm ago';
+  if (hr  < 24) return Math.floor(hr) + 'h ago';
+  const d0 = new Date(); d0.setHours(0,0,0,0);
+  const d1 = new Date(date); d1.setHours(0,0,0,0);
+  const dayDiff = Math.round((d0 - d1) / 86400000);
+  if (dayDiff === 1) return 'yesterday';
+  if (dayDiff <= 6) return dayDiff + 'd ago';
+  const curYear = new Date().getFullYear();
+  const label = date.getDate() + ' ' + MONTHS[date.getMonth()];
+  return date.getFullYear() === curYear ? label : label + ' ' + date.getFullYear();
+}
+function formatAbsolute(date) {
+  return date.toLocaleString(undefined, {
+    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+  });
+}
+// ─── COUNTRY → TIMEZONE MAP ───────────────────────────────────────────────────
+const CC_TZ = {
+  US:'America/New_York', CA:'America/Toronto', BR:'America/Sao_Paulo',
+  AR:'America/Argentina/Buenos_Aires', MX:'America/Mexico_City',
+  GB:'Europe/London', FR:'Europe/Paris', DE:'Europe/Berlin',
+  IT:'Europe/Rome', ES:'Europe/Madrid', PT:'Europe/Lisbon',
+  CH:'Europe/Zurich', EU:'Europe/Brussels', PL:'Europe/Warsaw',
+  JP:'Asia/Tokyo', CN:'Asia/Shanghai', HK:'Asia/Hong_Kong',
+  KR:'Asia/Seoul', SG:'Asia/Singapore', IN:'Asia/Kolkata',
+  TW:'Asia/Taipei', AU:'Australia/Sydney', NZ:'Pacific/Auckland',
+  TH:'Asia/Bangkok', ID:'Asia/Jakarta', MY:'Asia/Kuala_Lumpur',
+  PH:'Asia/Manila', VN:'Asia/Ho_Chi_Minh',
+  ZA:'Africa/Johannesburg', NG:'Africa/Lagos', EG:'Africa/Cairo',
+  SA:'Asia/Riyadh', QA:'Asia/Qatar', AE:'Asia/Dubai',
+  IL:'Asia/Jerusalem', TR:'Europe/Istanbul', RU:'Europe/Moscow',
+};
+function tzLabel(cc) {
+  const tz = CC_TZ[cc];
+  if (!tz) return null;
+  try {
+    const abbr = new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'short' })
+      .formatToParts(new Date()).find(p => p.type === 'timeZoneName')?.value || tz;
+    return abbr;
+  } catch { return null; }
+}
 // ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 function buildSidebar() {
   const cats = [
@@ -84,26 +137,34 @@ function getHomepage(url) {
 }
 function renderDirectoryMode() {
   const body = document.getElementById('sb-directory-content');
-  const allRegions = {};
-  for (const f of FEEDS) (allRegions[f.region] = allRegions[f.region] || []).push(f);
-  const editorialOrder = ['wire', 'independent', 'state-funded'];
-  body.innerHTML = Object.entries(allRegions).map(([region, feeds]) => `
+  const GEO_REGIONS = ['Europe', 'Americas', 'Asia-Pacific', 'MENA', 'Africa'];
+  // Only world-news feeds with geographic regions
+  const byRegion = {};
+  for (const f of FEEDS.filter(f => GEO_REGIONS.includes(f.region)))
+    (byRegion[f.region] = byRegion[f.region] || []).push(f);
+  const editorialOrder = ['wire', 'independent', 'state-funded', 'longform'];
+  body.innerHTML = GEO_REGIONS.filter(r => byRegion[r]).map(region => `
     <div class="dir-region-head">${region}</div>
-    ${feeds.map(f => {
+    ${byRegion[region].map(f => {
       const editorial = (f.tags || []).find(t => editorialOrder.includes(t)) || '';
       const homepage = getHomepage(f.url);
-      return `<div class="dir-card" onclick="window.open('${homepage}','_blank','noopener')">
+      return `<div class="dir-card" onclick="dirCardClick('${f.id}')">
         <div class="dir-card-top">
           <span class="dir-flag">${f.flag}</span>
-          <span class="dir-name">${f.name}</span>
-          ${f.lang !== 'en' ? `<span class="dir-lang">${f.lang}</span>` : ''}
+          <span class="dir-name">${esc(f.name)}</span>
+          <span class="dir-lang">${f.lang}</span>
           ${editorial ? `<span class="dir-tag ${editorial}">${editorial}</span>` : ''}
           <a class="dir-link" href="${homepage}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>
         </div>
-        ${f.notes ? `<span class="dir-notes">${f.notes}</span>` : ''}
+        ${f.notes ? `<span class="dir-notes">${esc(f.notes)}</span>` : ''}
       </div>`;
     }).join('')}
   `).join('');
+}
+function dirCardClick(feedId) {
+  // Switch back to filter mode, then select the source
+  if (sidebarMode === 'directory') toggleSidebarMode();
+  doSelect(feedId);
 }
 function toggleCatSection(catId) {
   const feeds = document.getElementById('cf-' + catId);
@@ -133,7 +194,6 @@ function updateLoadingText() {
 }
 // ─── FETCH ───────────────────────────────────────────────────────────────────
 const stripHtml = s => { const d = document.createElement('div'); d.innerHTML = s; return (d.textContent||'').replace(/\s+/g,' ').trim(); };
-const ago = ts => { const s=(Date.now()-ts)/1000; if(s<60) return Math.floor(s)+'s'; if(s<3600) return Math.floor(s/60)+'m'; if(s<86400) return Math.floor(s/3600)+'h'; return Math.floor(s/86400)+'d'; };
 async function fetchOne(f) {
   try {
     const r = await fetch(PROXY(f.url));
@@ -151,7 +211,7 @@ async function fetchOne(f) {
       title:   i.title||'',
       desc:    i.description ? stripHtml(i.description).slice(0,400) : '',
       link:    i.link||'',
-      date:    i.pubDate ? +new Date(i.pubDate) : Date.now(),
+      date:    (() => { const d = parseDate(i.pubDate); return d ? d.getTime() : Date.now(); })(),
       readMin: Math.max(1, Math.round((i.description ? stripHtml(i.description).split(/\s+/).length : 50) / 200)),
     }));
   } catch { return []; }
@@ -285,7 +345,7 @@ function render() {
         <span class="a-src">${esc(a.name)}</span>
         ${langBadge}
         <span class="a-dot">·</span>
-        <span class="a-time">${ago(a.date)}</span>
+        <span class="a-time" data-ts="${a.date}" title="${formatAbsolute(new Date(a.date))}">${relativeTime(new Date(a.date))}</span>
         <span class="a-dot">·</span>
         <span class="a-read-time">${a.readMin||1}m</span>
       </div>
@@ -418,7 +478,10 @@ function openReader(id) {
   if (window.innerWidth <= 960) readerEl.classList.add('show-mobile');
   document.getElementById('r-flag').textContent = a.flag;
   document.getElementById('r-src').textContent  = a.name;
-  document.getElementById('r-time').textContent = ' · '+ago(a.date);
+  const rTimeEl = document.getElementById('r-time');
+  rTimeEl.textContent = ' · ' + relativeTime(new Date(a.date));
+  rTimeEl.title = formatAbsolute(new Date(a.date));
+  rTimeEl.dataset.ts = a.date;
   document.getElementById('r-title').textContent = a.title;
   document.getElementById('r-date').textContent  = new Date(a.date).toLocaleString();
   document.getElementById('r-desc').textContent  = a.desc||'—';
@@ -550,6 +613,20 @@ function toggleTheme() {
   document.getElementById('btn-theme').textContent = next === 'dark' ? '☀' : '◑';
 }
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+function updateTimestamps() {
+  document.querySelectorAll('[data-ts]').forEach(el => {
+    const ts = parseInt(el.dataset.ts, 10);
+    if (!ts) return;
+    const d = new Date(ts);
+    const rel = relativeTime(d);
+    if (el.id === 'r-time') {
+      el.textContent = ' · ' + rel;
+    } else {
+      el.textContent = rel;
+    }
+  });
+}
+setInterval(updateTimestamps, 60000);
 initTheme();
 buildSidebar();
 document.getElementById('feed-name').textContent = '';
