@@ -995,6 +995,7 @@ async function refreshWatchlistPrices() {
     _updateWLRow(t, p);
     _checkAlerts(t, p);
   }));
+  _renderWLTable();
 }
 function addToWatchlist() {
   const ticker = (document.getElementById('wl-ticker-in').value || '').trim().toUpperCase();
