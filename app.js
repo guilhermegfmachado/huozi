@@ -252,7 +252,10 @@ function refresh() {
   S.articles = [];
   S.fetchedCats = new Set();
   S.counts = {};
-  loadCategory('world-news');
+  // Reload the category the user is currently viewing, fall back to world-news
+  const f = FEEDS.find(x => x.id === S.feed);
+  const cat = CATS.has(S.feed) ? S.feed : (f ? f.cat : 'world-news');
+  loadCategory(cat);
 }
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 const CATS = new Set(['world-news','tech','science','humanities','economics','investment']);
@@ -623,6 +626,17 @@ function updateTimestamps() {
   });
 }
 setInterval(updateTimestamps, 60000);
+// Tap timestamps to flash the absolute datetime (title attr doesn't fire on touch)
+document.getElementById('articles').addEventListener('click', e => {
+  const t = e.target;
+  if (t.classList?.contains('a-time') && t.dataset.ts) {
+    e.stopPropagation();
+    const ts = parseInt(t.dataset.ts, 10);
+    if (!ts) return;
+    t.textContent = formatAbsolute(new Date(ts));
+    setTimeout(() => { t.textContent = relativeTime(new Date(ts)); }, 2500);
+  }
+});
 initTheme();
 buildSidebar();
 document.getElementById('feed-name').textContent = '';
