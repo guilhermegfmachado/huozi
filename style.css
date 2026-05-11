@@ -503,7 +503,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   #btn-unread { display: none; }
   #btn-mark-read { display: none; }
   #btn-compact { display: none; }
-  #btn-refresh { display: none; }
+  /* refresh stays visible on mobile — no keyboard shortcut alternative */
   #search-wrap { max-width: none; }
 
   #feed-bar { gap: 0.4rem; padding: 0 0.7rem; }

@@ -88,7 +88,7 @@ function buildSidebar() {
                 ${f.notes ? `<button class="sb-info-btn"
                   onmouseenter="showTooltip(event,'${f.id}')"
                   onmouseleave="hideTooltip()"
-                  onclick="event.stopPropagation()">?</button>` : ''}
+                  onclick="event.stopPropagation();showTooltip(event,'${f.id}')">?</button>` : ''}
                 <span class="sb-count" id="c-${f.id}">·</span>
               </div>`).join('')}
           `).join('')}
@@ -252,7 +252,10 @@ function refresh() {
   S.articles = [];
   S.fetchedCats = new Set();
   S.counts = {};
-  loadCategory('world-news');
+  // Reload the category the user is currently viewing, fall back to world-news
+  const f = FEEDS.find(x => x.id === S.feed);
+  const cat = CATS.has(S.feed) ? S.feed : (f ? f.cat : 'world-news');
+  loadCategory(cat);
 }
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 const CATS = new Set(['world-news','tech','science','humanities','economics','investment']);
@@ -317,16 +320,18 @@ function render() {
     const langBadge = a.lang !== 'en'
       ? `<span class="a-lang">${a.lang}</span>` : '';
     const xlateAction = a.lang !== 'en'
-      ? `<button class="a-action-btn" onclick="event.stopPropagation();inlineXlate(this,'${esc(a.title)}','${a.lang}')">⟳ translate</button>` : '';
+      ? `<button class="a-action-btn" data-title="${esc(a.title)}" data-lang="${a.lang}"
+           onclick="event.stopPropagation();inlineXlate(this,this.dataset.title,this.dataset.lang)">⟳ translate</button>` : '';
     return `<div class="article${S.read.has(a.id)?' read':''}${S.active===a.id?' active':''}"
                  data-id="${esc(a.id)}"
-                 onclick="openReader('${esc(a.id)}')">
+                 onclick="openReader(this.dataset.id)">
       <div class="a-meta">
         <span class="a-cc">${esc(a.cc||'--')}</span>
         <span class="a-src">${esc(a.name)}</span>
         ${langBadge}
         <span class="a-dot">·</span>
-        <span class="a-time" data-ts="${a.date}" title="${formatAbsolute(new Date(a.date))}">${relativeTime(new Date(a.date))}</span>
+        <span class="a-time" data-ts="${a.date}" title="${formatAbsolute(new Date(a.date))}"
+              onclick="event.stopPropagation();flashTimestamp(this)">${relativeTime(new Date(a.date))}</span>
         <span class="a-dot">·</span>
         <span class="a-read-time">${a.readMin||1}m</span>
       </div>
@@ -334,7 +339,7 @@ function render() {
       <div class="a-desc">${esc(a.desc)}</div>
       <div class="a-actions">
         <button class="a-action-btn${isSaved?' saved':''}"
-          onclick="event.stopPropagation();toggleSave('${esc(a.id)}')">${isSaved?'◆ saved':'◇ save'}</button>
+          onclick="event.stopPropagation();toggleSave(this.closest('[data-id]').dataset.id)">${isSaved?'◆ saved':'◇ save'}</button>
         <span class="a-dot">·</span>
         <a class="a-open-link" href="${esc(a.link)}" target="_blank" rel="noopener"
           onclick="event.stopPropagation()">↗ open</a>
@@ -414,7 +419,7 @@ function toggleSavedDropdown(e) {
   const savedArticles = S.articles.filter(a => S.saved.has(a.id));
   if (!savedArticles.length) return;
   dd.innerHTML = savedArticles.map(a =>
-    `<div class="saved-dd-item" onclick="event.stopPropagation();openReader('${esc(a.id)}');document.getElementById('saved-dropdown').style.display='none'">${esc(a.title)}</div>`
+    `<div class="saved-dd-item" data-id="${esc(a.id)}" onclick="event.stopPropagation();openReader(this.dataset.id);document.getElementById('saved-dropdown').style.display='none'">${esc(a.title)}</div>`
   ).join('');
   const rect = document.getElementById('c-saved').getBoundingClientRect();
   const ddW = 260;
@@ -426,11 +431,14 @@ function toggleSavedDropdown(e) {
 document.addEventListener('click', () => {
   const dd = document.getElementById('saved-dropdown');
   if (dd) dd.style.display = 'none';
+  hideTooltip();
 });
 function toggleSave(id) {
   if (S.saved.has(id)) { S.saved.delete(id); } else { S.saved.add(id); }
   saveSaved();
-  document.getElementById('c-saved').textContent = S.saved.size;
+  const cSaved = document.getElementById('c-saved');
+  cSaved.textContent = S.saved.size;
+  cSaved.classList.toggle('has-saved', S.saved.size > 0);
   // update the button in place without full re-render
   const card = document.querySelector(`.article[data-id="${id}"] .a-action-btn`);
   if (card) {
@@ -599,6 +607,7 @@ const M = {
   watchlist: JSON.parse(localStorage.getItem('px_watchlist') || '[]'),
   alerts:    JSON.parse(localStorage.getItem('px_alerts')    || '[]'),
   portSort: { col: 'ticker', dir: 1 },
+  wlSort:   { col: 'ticker', dir: 1 },
   prices: {},
   refreshTimer: null,
   currentSection: null,
@@ -621,6 +630,12 @@ function updateTimestamps() {
   });
 }
 setInterval(updateTimestamps, 60000);
+function flashTimestamp(el) {
+  const ts = parseInt(el.dataset.ts, 10);
+  if (!ts) return;
+  el.textContent = formatAbsolute(new Date(ts));
+  setTimeout(() => { el.textContent = relativeTime(new Date(ts)); }, 2500);
+}
 initTheme();
 buildSidebar();
 document.getElementById('feed-name').textContent = '';
@@ -876,6 +891,51 @@ function addTickerToWatchlist(ticker) {
 }
 
 // ─── WATCHLIST ────────────────────────────────────────────────────────────────
+function _renderWLTable() {
+  const tbody = document.getElementById('wl-tbody');
+  if (!tbody || !M.watchlist.length) return;
+  const { col, dir } = M.wlSort;
+  const rows = M.watchlist.map(t => {
+    const cached = priceCache[t.toUpperCase()];
+    const p = cached && Date.now() - cached.ts < 300000 ? cached.data : null;
+    return { ticker: t,
+      price: p?.price ?? null, change: p?.change ?? null,
+      changePct: p?.changePct ?? null, low52: p?.low52 ?? null, high52: p?.high52 ?? null };
+  });
+  rows.sort((a, b) => {
+    const av = a[col] ?? (dir > 0 ? Infinity : -Infinity);
+    const bv = b[col] ?? (dir > 0 ? Infinity : -Infinity);
+    return (typeof av === 'string' ? av.localeCompare(bv) : av - bv) * dir;
+  });
+  tbody.innerHTML = rows.map(r => {
+    const al = M.alerts.find(a => a.ticker === r.ticker);
+    const badge = al
+      ? `<span class="src-tag" style="border-color:#f5c54233;color:#f5c542;margin-left:0.3rem">${al.direction} ${fmt(al.targetPrice)}</span>` : '';
+    return `<tr id="wl-row-${r.ticker.replace('.','_')}">
+      <td class="col-ticker">${r.ticker}${badge}</td>
+      <td class="col-num">${r.price != null ? fmt(r.price) : '—'}</td>
+      <td class="col-num ${gainCls(r.change)}">${r.change != null ? fmtSgn(r.change) : '—'}</td>
+      <td class="col-num ${gainCls(r.changePct)}">${fmtPct(r.changePct)}</td>
+      <td class="col-num">${r.low52  != null ? fmt(r.low52)  : '—'}</td>
+      <td class="col-num">${r.high52 != null ? fmt(r.high52) : '—'}</td>
+      <td class="col-act">
+        <button class="tbl-act-btn add-btn" onclick="openAlertForm('${r.ticker}')" title="set alert">⚑</button>
+        <button class="tbl-act-btn add-btn" onclick="addToPortfolio('${r.ticker}')" title="add to portfolio">▦</button>
+        <button class="tbl-act-btn" onclick="removeFromWatchlist('${r.ticker}')" title="remove">✕</button>
+      </td></tr>`;
+  }).join('');
+  document.querySelectorAll('#wl-table th').forEach(th => {
+    th.classList.remove('sorted');
+    const oc = th.getAttribute('onclick') || '';
+    if (oc.includes(`'${col}'`)) th.classList.add('sorted');
+  });
+  document.getElementById('wl-info').textContent = `${M.watchlist.length} tickers`;
+}
+function sortWL(col) {
+  if (M.wlSort.col === col) M.wlSort.dir *= -1;
+  else { M.wlSort.col = col; M.wlSort.dir = 1; }
+  _renderWLTable();
+}
 async function renderWatchlist() {
   const tbody = document.getElementById('wl-tbody');
   if (!tbody) return;
@@ -895,6 +955,7 @@ async function renderWatchlist() {
     _updateWLRow(t, p);
     _checkAlerts(t, p);
   }));
+  _renderWLTable(); // apply sort after all prices are in
 }
 function _updateWLRow(ticker, p) {
   const rowId = 'wl-row-' + ticker.replace('.','_');
