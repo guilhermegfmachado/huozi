@@ -435,7 +435,9 @@ document.addEventListener('click', () => {
 function toggleSave(id) {
   if (S.saved.has(id)) { S.saved.delete(id); } else { S.saved.add(id); }
   saveSaved();
-  document.getElementById('c-saved').textContent = S.saved.size;
+  const cSaved = document.getElementById('c-saved');
+  cSaved.textContent = S.saved.size;
+  cSaved.classList.toggle('has-saved', S.saved.size > 0);
   // update the button in place without full re-render
   const card = document.querySelector(`.article[data-id="${id}"] .a-action-btn`);
   if (card) {
@@ -604,6 +606,7 @@ const M = {
   watchlist: JSON.parse(localStorage.getItem('px_watchlist') || '[]'),
   alerts:    JSON.parse(localStorage.getItem('px_alerts')    || '[]'),
   portSort: { col: 'ticker', dir: 1 },
+  wlSort:   { col: 'ticker', dir: 1 },
   prices: {},
   refreshTimer: null,
   currentSection: null,
@@ -892,6 +895,51 @@ function addTickerToWatchlist(ticker) {
 }
 
 // ─── WATCHLIST ────────────────────────────────────────────────────────────────
+function _renderWLTable() {
+  const tbody = document.getElementById('wl-tbody');
+  if (!tbody || !M.watchlist.length) return;
+  const { col, dir } = M.wlSort;
+  const rows = M.watchlist.map(t => {
+    const cached = priceCache[t.toUpperCase()];
+    const p = cached && Date.now() - cached.ts < 300000 ? cached.data : null;
+    return { ticker: t,
+      price: p?.price ?? null, change: p?.change ?? null,
+      changePct: p?.changePct ?? null, low52: p?.low52 ?? null, high52: p?.high52 ?? null };
+  });
+  rows.sort((a, b) => {
+    const av = a[col] ?? (dir > 0 ? Infinity : -Infinity);
+    const bv = b[col] ?? (dir > 0 ? Infinity : -Infinity);
+    return (typeof av === 'string' ? av.localeCompare(bv) : av - bv) * dir;
+  });
+  tbody.innerHTML = rows.map(r => {
+    const al = M.alerts.find(a => a.ticker === r.ticker);
+    const badge = al
+      ? `<span class="src-tag" style="border-color:#f5c54233;color:#f5c542;margin-left:0.3rem">${al.direction} ${fmt(al.targetPrice)}</span>` : '';
+    return `<tr id="wl-row-${r.ticker.replace('.','_')}">
+      <td class="col-ticker">${r.ticker}${badge}</td>
+      <td class="col-num">${r.price != null ? fmt(r.price) : '—'}</td>
+      <td class="col-num ${gainCls(r.change)}">${r.change != null ? fmtSgn(r.change) : '—'}</td>
+      <td class="col-num ${gainCls(r.changePct)}">${fmtPct(r.changePct)}</td>
+      <td class="col-num">${r.low52  != null ? fmt(r.low52)  : '—'}</td>
+      <td class="col-num">${r.high52 != null ? fmt(r.high52) : '—'}</td>
+      <td class="col-act">
+        <button class="tbl-act-btn add-btn" onclick="openAlertForm('${r.ticker}')" title="set alert">⚑</button>
+        <button class="tbl-act-btn add-btn" onclick="addToPortfolio('${r.ticker}')" title="add to portfolio">▦</button>
+        <button class="tbl-act-btn" onclick="removeFromWatchlist('${r.ticker}')" title="remove">✕</button>
+      </td></tr>`;
+  }).join('');
+  document.querySelectorAll('#wl-table th').forEach(th => {
+    th.classList.remove('sorted');
+    const oc = th.getAttribute('onclick') || '';
+    if (oc.includes(`'${col}'`)) th.classList.add('sorted');
+  });
+  document.getElementById('wl-info').textContent = `${M.watchlist.length} tickers`;
+}
+function sortWL(col) {
+  if (M.wlSort.col === col) M.wlSort.dir *= -1;
+  else { M.wlSort.col = col; M.wlSort.dir = 1; }
+  _renderWLTable();
+}
 async function renderWatchlist() {
   const tbody = document.getElementById('wl-tbody');
   if (!tbody) return;
@@ -911,6 +959,7 @@ async function renderWatchlist() {
     _updateWLRow(t, p);
     _checkAlerts(t, p);
   }));
+  _renderWLTable(); // apply sort after all prices are in
 }
 function _updateWLRow(ticker, p) {
   const rowId = 'wl-row-' + ticker.replace('.','_');
