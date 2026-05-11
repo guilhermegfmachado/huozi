@@ -55,10 +55,10 @@ function buildSidebar() {
     { id: 'economics',   label: 'Economics',            icon: '◫' },
     { id: 'investment',  label: 'Investment / VC',      icon: '▦' },
   ];
-  const worldOrder = ['Europe','Americas','Asia-Pacific','MENA'];
+  const worldOrder = ['Europe','Americas','Asia-Pacific','MENA','Africa'];
   const vertOrder  = ['Analysis','Journalism','Institutional','Journals',
                       'Research','Preprints','Wire','Opinion','Blogs',
-                      'Essays','Literature','History','Curated','Community'];
+                      'Essays','Literature','History','Curated','Community','Africa'];
   document.getElementById('sb-regions').innerHTML = cats.map(cat => {
     const byRegion = {};
     for (const f of FEEDS.filter(f => f.cat === cat.id))
@@ -188,6 +188,7 @@ async function fetchOne(f) {
       flag:    f.flag,
       cc:      f.cc || '--',
       lang:    f.lang,
+      region:  f.region || '',
       title:   i.title||'',
       desc:    i.description ? stripHtml(i.description).slice(0,400) : '',
       link:    i.link||'',
