@@ -330,7 +330,8 @@ function render() {
         <span class="a-src">${esc(a.name)}</span>
         ${langBadge}
         <span class="a-dot">·</span>
-        <span class="a-time" data-ts="${a.date}" title="${formatAbsolute(new Date(a.date))}">${relativeTime(new Date(a.date))}</span>
+        <span class="a-time" data-ts="${a.date}" title="${formatAbsolute(new Date(a.date))}"
+              onclick="event.stopPropagation();flashTimestamp(this)">${relativeTime(new Date(a.date))}</span>
         <span class="a-dot">·</span>
         <span class="a-read-time">${a.readMin||1}m</span>
       </div>
@@ -629,17 +630,12 @@ function updateTimestamps() {
   });
 }
 setInterval(updateTimestamps, 60000);
-// Tap timestamps to flash the absolute datetime (title attr doesn't fire on touch)
-document.getElementById('articles').addEventListener('click', e => {
-  const t = e.target;
-  if (t.classList?.contains('a-time') && t.dataset.ts) {
-    e.stopPropagation();
-    const ts = parseInt(t.dataset.ts, 10);
-    if (!ts) return;
-    t.textContent = formatAbsolute(new Date(ts));
-    setTimeout(() => { t.textContent = relativeTime(new Date(ts)); }, 2500);
-  }
-});
+function flashTimestamp(el) {
+  const ts = parseInt(el.dataset.ts, 10);
+  if (!ts) return;
+  el.textContent = formatAbsolute(new Date(ts));
+  setTimeout(() => { el.textContent = relativeTime(new Date(ts)); }, 2500);
+}
 initTheme();
 buildSidebar();
 document.getElementById('feed-name').textContent = '';
