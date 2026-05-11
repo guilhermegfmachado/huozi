@@ -45,31 +45,6 @@ function formatAbsolute(date) {
     hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
   });
 }
-// ─── COUNTRY → TIMEZONE MAP ───────────────────────────────────────────────────
-const CC_TZ = {
-  US:'America/New_York', CA:'America/Toronto', BR:'America/Sao_Paulo',
-  AR:'America/Argentina/Buenos_Aires', MX:'America/Mexico_City',
-  GB:'Europe/London', FR:'Europe/Paris', DE:'Europe/Berlin',
-  IT:'Europe/Rome', ES:'Europe/Madrid', PT:'Europe/Lisbon',
-  CH:'Europe/Zurich', EU:'Europe/Brussels', PL:'Europe/Warsaw',
-  JP:'Asia/Tokyo', CN:'Asia/Shanghai', HK:'Asia/Hong_Kong',
-  KR:'Asia/Seoul', SG:'Asia/Singapore', IN:'Asia/Kolkata',
-  TW:'Asia/Taipei', AU:'Australia/Sydney', NZ:'Pacific/Auckland',
-  TH:'Asia/Bangkok', ID:'Asia/Jakarta', MY:'Asia/Kuala_Lumpur',
-  PH:'Asia/Manila', VN:'Asia/Ho_Chi_Minh',
-  ZA:'Africa/Johannesburg', NG:'Africa/Lagos', EG:'Africa/Cairo',
-  SA:'Asia/Riyadh', QA:'Asia/Qatar', AE:'Asia/Dubai',
-  IL:'Asia/Jerusalem', TR:'Europe/Istanbul', RU:'Europe/Moscow',
-};
-function tzLabel(cc) {
-  const tz = CC_TZ[cc];
-  if (!tz) return null;
-  try {
-    const abbr = new Intl.DateTimeFormat('en', { timeZone: tz, timeZoneName: 'short' })
-      .formatToParts(new Date()).find(p => p.type === 'timeZoneName')?.value || tz;
-    return abbr;
-  } catch { return null; }
-}
 // ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 function buildSidebar() {
   const cats = [
@@ -162,9 +137,14 @@ function renderDirectoryMode() {
   `).join('');
 }
 function dirCardClick(feedId) {
-  // Switch back to filter mode, then select the source
   if (sidebarMode === 'directory') toggleSidebarMode();
   doSelect(feedId);
+  // Expand the category section so the selected source is visible
+  const feed = FEEDS.find(f => f.id === feedId);
+  if (feed) {
+    const catEl = document.getElementById('cf-' + feed.cat);
+    if (catEl && catEl.classList.contains('collapsed')) toggleCatSection(feed.cat);
+  }
 }
 function toggleCatSection(catId) {
   const feeds = document.getElementById('cf-' + catId);
@@ -483,7 +463,7 @@ function openReader(id) {
   rTimeEl.title = formatAbsolute(new Date(a.date));
   rTimeEl.dataset.ts = a.date;
   document.getElementById('r-title').textContent = a.title;
-  document.getElementById('r-date').textContent  = new Date(a.date).toLocaleString();
+  document.getElementById('r-date').textContent  = formatAbsolute(new Date(a.date));
   document.getElementById('r-desc').textContent  = a.desc||'—';
   document.getElementById('r-xlated').className = '';
   document.getElementById('r-xlated').textContent = '';
@@ -612,6 +592,19 @@ function toggleTheme() {
   localStorage.setItem('px_theme', next);
   document.getElementById('btn-theme').textContent = next === 'dark' ? '☀' : '◑';
 }
+// ─── SECTION STATE ────────────────────────────────────────────────────────────
+const M = {
+  portfolio: JSON.parse(localStorage.getItem('px_portfolio') || '[]'),
+  watchlist: JSON.parse(localStorage.getItem('px_watchlist') || '[]'),
+  alerts:    JSON.parse(localStorage.getItem('px_alerts')    || '[]'),
+  portSort: { col: 'ticker', dir: 1 },
+  prices: {},
+  refreshTimer: null,
+  currentSection: null,
+};
+const savePortfolio = () => localStorage.setItem('px_portfolio', JSON.stringify(M.portfolio));
+const saveWatchlist = () => localStorage.setItem('px_watchlist', JSON.stringify(M.watchlist));
+const saveAlerts    = () => localStorage.setItem('px_alerts',    JSON.stringify(M.alerts));
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 function updateTimestamps() {
   document.querySelectorAll('[data-ts]').forEach(el => {
@@ -643,19 +636,6 @@ function setNewsCat(nc) {
 }
 
 // ─── SECTION SWITCHING ────────────────────────────────────────────────────────
-const M = {
-  portfolio: JSON.parse(localStorage.getItem('px_portfolio') || '[]'),
-  watchlist: JSON.parse(localStorage.getItem('px_watchlist') || '[]'),
-  alerts:    JSON.parse(localStorage.getItem('px_alerts')    || '[]'),
-  portSort: { col: 'ticker', dir: 1 },
-  prices: {},
-  refreshTimer: null,
-  currentSection: null,
-};
-const savePortfolio = () => localStorage.setItem('px_portfolio', JSON.stringify(M.portfolio));
-const saveWatchlist = () => localStorage.setItem('px_watchlist', JSON.stringify(M.watchlist));
-const saveAlerts    = () => localStorage.setItem('px_alerts',    JSON.stringify(M.alerts));
-
 function showSection(name) {
   M.currentSection = name;
   clearInterval(M.refreshTimer);
