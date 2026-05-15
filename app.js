@@ -1,5 +1,57 @@
-// ─── PROXY ───────────────────────────────────────────────────────────────────
-const PROXY = url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+// ─── PROXY CASCADE ───────────────────────────────────────────────────────────
+// Try each proxy in order; move to the next on any failure.
+function _getText(el, ...tags) {
+  for (const t of tags) {
+    const found = el.getElementsByTagName(t)[0];
+    if (found?.textContent?.trim()) return found.textContent.trim();
+  }
+  return '';
+}
+function parseRssXml(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  if (doc.querySelector('parsererror')) throw new Error('xml parse error');
+  // Atom
+  const entries = [...doc.getElementsByTagName('entry')];
+  if (entries.length) return entries.map(e => ({
+    title:   _getText(e, 'title'),
+    link:    e.querySelector('link[rel="alternate"]')?.getAttribute('href')
+             || e.querySelector('link:not([rel])')?.getAttribute('href')
+             || e.querySelector('link')?.getAttribute('href') || '',
+    guid:    _getText(e, 'id'),
+    pubDate: _getText(e, 'published', 'updated'),
+    description: _getText(e, 'content', 'summary'),
+  }));
+  // RSS 2.0 + RSS 1.0/RDF
+  return [...doc.getElementsByTagName('item')].map(e => ({
+    title:   _getText(e, 'title'),
+    link:    _getText(e, 'link') || e.querySelector('link')?.getAttribute('href') || '',
+    guid:    _getText(e, 'guid', 'link'),
+    pubDate: _getText(e, 'pubDate', 'dc:date', 'date', 'published'),
+    description: _getText(e, 'description', 'content:encoded', 'content'),
+  }));
+}
+const PROXY_LIST = [
+  {
+    build: url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
+    parse: async r => {
+      const d = await r.json();
+      if (d.status !== 'ok') throw new Error(d.message || 'rss2json error');
+      return (d.items || []).map(i => ({
+        title: i.title || '', link: i.link || '',
+        guid: i.guid || i.link || '', pubDate: i.pubDate || '',
+        description: i.description || '',
+      }));
+    },
+  },
+  {
+    build: url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    parse: async r => { const d = await r.json(); if (!d.contents) throw new Error('empty'); return parseRssXml(d.contents); },
+  },
+  {
+    build: url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    parse: async r => parseRssXml(await r.text()),
+  },
+];
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const S = {
   articles: [],
@@ -174,28 +226,28 @@ function updateLoadingText() {
 }
 // ─── FETCH ───────────────────────────────────────────────────────────────────
 const stripHtml = s => { const d = document.createElement('div'); d.innerHTML = s; return (d.textContent||'').replace(/\s+/g,' ').trim(); };
+function _mapItems(items, f) {
+  return items.map(i => ({
+    id:      i.guid || i.link || Math.random().toString(36),
+    feedId:  f.id, cat: f.cat, name: f.name, flag: f.flag,
+    cc:      f.cc || '--', lang: f.lang, region: f.region || '',
+    title:   i.title || '',
+    desc:    i.description ? stripHtml(i.description).slice(0, 400) : '',
+    link:    i.link || '',
+    date:    (() => { const d = parseDate(i.pubDate); return d ? d.getTime() : Date.now(); })(),
+    readMin: Math.max(1, Math.round((i.description ? stripHtml(i.description).split(/\s+/).length : 50) / 200)),
+  }));
+}
 async function fetchOne(f) {
-  try {
-    const r = await fetch(PROXY(f.url));
-    if (!r.ok) throw 0;
-    const d = await r.json();
-    if (d.status !== 'ok') throw 0;
-    return (d.items||[]).map(i => ({
-      id:      i.guid||i.link||Math.random().toString(36),
-      feedId:  f.id,
-      cat:     f.cat,
-      name:    f.name,
-      flag:    f.flag,
-      cc:      f.cc || '--',
-      lang:    f.lang,
-      region:  f.region || '',
-      title:   i.title||'',
-      desc:    i.description ? stripHtml(i.description).slice(0,400) : '',
-      link:    i.link||'',
-      date:    (() => { const d = parseDate(i.pubDate); return d ? d.getTime() : Date.now(); })(),
-      readMin: Math.max(1, Math.round((i.description ? stripHtml(i.description).split(/\s+/).length : 50) / 200)),
-    }));
-  } catch { return []; }
+  for (const proxy of PROXY_LIST) {
+    try {
+      const r = await fetch(proxy.build(f.url));
+      if (!r.ok) continue;
+      const items = await proxy.parse(r);
+      return _mapItems(items, f);
+    } catch { continue; }
+  }
+  return [];
 }
 // Priority feeds loaded first for fast initial render
 const PRIORITY = new Set(['bbc','guardian','nyt','ap','aljazeera','dw','ft','nhk']);
