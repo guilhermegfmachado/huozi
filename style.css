@@ -509,12 +509,17 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   #feed-bar { gap: 0.4rem; padding: 0 0.7rem; }
   #feed-name { font-size: 0.7rem; }
   #feed-info { display: none; }
-  #sort-label { display: none; }
+  #feed-ctrls { display: none; }
   #news-cat-filter { flex-wrap: nowrap; overflow-x: auto; padding: 0.3rem 0.7rem; }
   #news-cat-filter::-webkit-scrollbar { display: none; }
 
+  /* Trim article meta row */
+  .a-cc { display: none; }
+  .a-read-time { display: none; }
   .article { padding: 0.65rem 0.75rem; }
-  #statusbar { padding: 0 0.75rem; gap: 0.8rem; }
+
+  /* Hide stats bar — not useful on small screen */
+  #statusbar { display: none; }
 }
 /* ── SOURCE INFO TOOLTIP ─────────────────────────────── */
 .sb-item { position: relative; }

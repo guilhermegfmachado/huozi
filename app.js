@@ -641,7 +641,12 @@ buildSidebar();
 document.getElementById('feed-name').textContent = '';
 document.getElementById('btn-unread').classList.toggle('on', S.unread);
 document.getElementById('btn-compact').classList.toggle('on', S.compact);
-loadCategory('world-news');
+loadCategory('world-news').then(() => {
+  // Background-load all remaining categories so every source is available
+  ['tech','science','humanities','economics','investment'].forEach(cat => {
+    loadCategory(cat, true);
+  });
+});
 
 // ─── NEWS CATEGORY FILTER ─────────────────────────────────────────────────────
 function setNewsCat(nc) {
