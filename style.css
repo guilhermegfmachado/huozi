@@ -515,7 +515,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   /* Trim article meta row */
   .a-cc { display: none; }
-  .a-read-time { display: none; }
   .article { padding: 0.65rem 0.75rem; }
 
   /* Hide stats bar — not useful on small screen */
