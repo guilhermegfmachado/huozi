@@ -1302,7 +1302,7 @@ document.getElementById('wl-ticker-in').addEventListener('keydown', e => {
     const dx = isSwipe(e);
     if (!dx) return;
     if (dx > 0 && swipeTarget?.dataset.id) openReader(swipeTarget.dataset.id);
-    else if (dx < 0) navArticle(1);
+    else if (dx < 0 && S.active) navArticle(1);
   }, { passive: true });
   // Reader: swipe left → close
   const rdrEl = document.getElementById('reader');
@@ -1315,7 +1315,7 @@ if ('serviceWorker' in navigator) {
 }
 // ─── STARTUP: load cached articles for instant render ────────────────────────
 IDB.getRecent().then(cached => {
-  if (!cached.length) return;
+  if (!cached.length || S.articles.length) return; // skip if fresh data already arrived
   S.articles = cached;
   S.articles.sort((a, b) => b.date - a.date);
   document.getElementById('c-all').textContent = S.articles.length;

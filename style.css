@@ -851,3 +851,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   #sidebar.open { transform: translateX(0); }
   #sidebar-overlay.open { display: block; }
 }
+/* ── iOS PWA SAFE AREA ────────────────────────────────── */
+@supports (padding: env(safe-area-inset-top)) {
+  #topbar {
+    padding-top: env(safe-area-inset-top);
+    height: calc(var(--topbar) + env(safe-area-inset-top));
+  }
+  #footer {
+    padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+  }
+}
