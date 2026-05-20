@@ -519,6 +519,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   /* Hide stats bar — not useful on small screen */
   #statusbar { display: none; }
+
+  /* Prevent iOS Safari from zooming in on input focus */
+  #search, .form-input, .filter-select, .filter-input { font-size: 16px; }
 }
 /* ── SOURCE INFO TOOLTIP ─────────────────────────────── */
 .sb-item { position: relative; }
@@ -859,5 +862,14 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   }
   #footer {
     padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+  }
+  /* Mobile sidebar overlay starts at top:0 — push content below status bar */
+  @media (max-width: 900px) {
+    #sidebar { padding-top: env(safe-area-inset-top); }
+  }
+  /* Reader full-screen on mobile — same treatment */
+  #reader.show-mobile {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

@@ -310,7 +310,11 @@ function refresh() {
   // Reload the category the user is currently viewing, fall back to world-news
   const f = FEEDS.find(x => x.id === S.feed);
   const cat = CATS.has(S.feed) ? S.feed : (f ? f.cat : 'world-news');
-  loadCategory(cat);
+  loadCategory(cat).then(() => {
+    ['world-news','tech','science','humanities','economics','investment']
+      .filter(c => c !== cat)
+      .forEach(c => loadCategory(c, true));
+  });
 }
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 const CATS = new Set(['world-news','tech','science','humanities','economics','investment']);
