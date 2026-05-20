@@ -1,5 +1,57 @@
-// ─── PROXY ───────────────────────────────────────────────────────────────────
-const PROXY = url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+// ─── PROXY CASCADE ───────────────────────────────────────────────────────────
+// Try each proxy in order; move to the next on any failure.
+function _getText(el, ...tags) {
+  for (const t of tags) {
+    const found = el.getElementsByTagName(t)[0];
+    if (found?.textContent?.trim()) return found.textContent.trim();
+  }
+  return '';
+}
+function parseRssXml(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  if (doc.querySelector('parsererror')) throw new Error('xml parse error');
+  // Atom
+  const entries = [...doc.getElementsByTagName('entry')];
+  if (entries.length) return entries.map(e => ({
+    title:   _getText(e, 'title'),
+    link:    e.querySelector('link[rel="alternate"]')?.getAttribute('href')
+             || e.querySelector('link:not([rel])')?.getAttribute('href')
+             || e.querySelector('link')?.getAttribute('href') || '',
+    guid:    _getText(e, 'id'),
+    pubDate: _getText(e, 'published', 'updated'),
+    description: _getText(e, 'content', 'summary'),
+  }));
+  // RSS 2.0 + RSS 1.0/RDF
+  return [...doc.getElementsByTagName('item')].map(e => ({
+    title:   _getText(e, 'title'),
+    link:    _getText(e, 'link') || e.querySelector('link')?.getAttribute('href') || '',
+    guid:    _getText(e, 'guid', 'link'),
+    pubDate: _getText(e, 'pubDate', 'dc:date', 'date', 'published'),
+    description: _getText(e, 'description', 'content:encoded', 'content'),
+  }));
+}
+const PROXY_LIST = [
+  {
+    build: url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
+    parse: async r => {
+      const d = await r.json();
+      if (d.status !== 'ok') throw new Error(d.message || 'rss2json error');
+      return (d.items || []).map(i => ({
+        title: i.title || '', link: i.link || '',
+        guid: i.guid || i.link || '', pubDate: i.pubDate || '',
+        description: i.description || '',
+      }));
+    },
+  },
+  {
+    build: url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    parse: async r => { const d = await r.json(); if (!d.contents) throw new Error('empty'); return parseRssXml(d.contents); },
+  },
+  {
+    build: url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    parse: async r => parseRssXml(await r.text()),
+  },
+];
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const S = {
   articles: [],
@@ -174,41 +226,43 @@ function updateLoadingText() {
 }
 // ─── FETCH ───────────────────────────────────────────────────────────────────
 const stripHtml = s => { const d = document.createElement('div'); d.innerHTML = s; return (d.textContent||'').replace(/\s+/g,' ').trim(); };
+function _mapItems(items, f) {
+  return items.map(i => ({
+    id:      i.guid || i.link || Math.random().toString(36),
+    feedId:  f.id, cat: f.cat, name: f.name, flag: f.flag,
+    cc:      f.cc || '--', lang: f.lang, region: f.region || '',
+    title:   i.title || '',
+    desc:    i.description ? stripHtml(i.description).slice(0, 400) : '',
+    link:    i.link || '',
+    date:    (() => { const d = parseDate(i.pubDate); return d ? d.getTime() : Date.now(); })(),
+    readMin: Math.max(1, Math.round((i.description ? stripHtml(i.description).split(/\s+/).length : 50) / 200)),
+  }));
+}
 async function fetchOne(f) {
-  try {
-    const r = await fetch(PROXY(f.url));
-    if (!r.ok) throw 0;
-    const d = await r.json();
-    if (d.status !== 'ok') throw 0;
-    return (d.items||[]).map(i => ({
-      id:      i.guid||i.link||Math.random().toString(36),
-      feedId:  f.id,
-      cat:     f.cat,
-      name:    f.name,
-      flag:    f.flag,
-      cc:      f.cc || '--',
-      lang:    f.lang,
-      region:  f.region || '',
-      title:   i.title||'',
-      desc:    i.description ? stripHtml(i.description).slice(0,400) : '',
-      link:    i.link||'',
-      date:    (() => { const d = parseDate(i.pubDate); return d ? d.getTime() : Date.now(); })(),
-      readMin: Math.max(1, Math.round((i.description ? stripHtml(i.description).split(/\s+/).length : 50) / 200)),
-    }));
-  } catch { return []; }
+  for (const proxy of PROXY_LIST) {
+    try {
+      const r = await fetch(proxy.build(f.url));
+      if (!r.ok) continue;
+      const items = await proxy.parse(r);
+      return _mapItems(items, f);
+    } catch { continue; }
+  }
+  return null; // all proxies failed
 }
 // Priority feeds loaded first for fast initial render
 const PRIORITY = new Set(['bbc','guardian','nyt','ap','aljazeera','dw','ft','nhk']);
 async function fetchBatch(feeds, trackProgress = false) {
   const promises = feeds.map(f =>
     fetchOne(f).then(items => {
-      if (trackProgress) {
-        loadProgress.done++;
-        updateLoadingText();
+      if (trackProgress) { loadProgress.done++; updateLoadingText(); }
+      const el = document.getElementById('c-' + f.id);
+      if (items === null) {
+        S.counts[f.id] = -1;
+        if (el) { el.textContent = '✗'; el.classList.add('failed'); }
+        return [];
       }
       S.counts[f.id] = items.length;
-      const el = document.getElementById('c-' + f.id);
-      if (el) el.textContent = items.length || '·';
+      if (el) { el.textContent = items.length || '·'; el.classList.remove('failed'); }
       return items;
     }).catch(() => {
       if (trackProgress) { loadProgress.done++; updateLoadingText(); }
@@ -224,6 +278,7 @@ async function fetchBatch(feeds, trackProgress = false) {
   });
   S.articles.push(...newArticles);
   S.articles.sort((a,b) => b.date - a.date);
+  IDB.putAll(newArticles).catch(() => {});
   document.getElementById('c-all').textContent = S.articles.length;
   document.getElementById('updated').textContent = 'updated just now';
   updateStats(); render();
@@ -255,7 +310,11 @@ function refresh() {
   // Reload the category the user is currently viewing, fall back to world-news
   const f = FEEDS.find(x => x.id === S.feed);
   const cat = CATS.has(S.feed) ? S.feed : (f ? f.cat : 'world-news');
-  loadCategory(cat);
+  loadCategory(cat).then(() => {
+    ['world-news','tech','science','humanities','economics','investment']
+      .filter(c => c !== cat)
+      .forEach(c => loadCategory(c, true));
+  });
 }
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 const CATS = new Set(['world-news','tech','science','humanities','economics','investment']);
@@ -590,9 +649,12 @@ document.addEventListener('keydown', e => {
 });
 // ─── THEME ────────────────────────────────────────────────────────────────────
 function initTheme() {
-  const saved = localStorage.getItem('px_theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', saved);
-  document.getElementById('btn-theme').textContent = saved === 'dark' ? '☀' : '◑';
+  const saved = localStorage.getItem('px_theme');
+  const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  const theme = saved || preferred;
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('btn-theme').textContent = theme === 'dark' ? '☀' : '◑';
+  document.getElementById('meta-theme-color')?.setAttribute('content', theme === 'dark' ? '#0c0c0c' : '#f7f5f0');
 }
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -600,7 +662,64 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('px_theme', next);
   document.getElementById('btn-theme').textContent = next === 'dark' ? '☀' : '◑';
+  document.getElementById('meta-theme-color')?.setAttribute('content', next === 'dark' ? '#0c0c0c' : '#f7f5f0');
 }
+// ─── PORTFOLIO HISTORY CHART ──────────────────────────────────────────────────
+function _renderPortfolioChart() {
+  const hist = JSON.parse(localStorage.getItem('px_port_history') || '{}');
+  const entries = Object.entries(hist).sort(([a],[b]) => a.localeCompare(b));
+  if (entries.length < 2) return '';
+  const vals = entries.map(([,v]) => v);
+  const min = Math.min(...vals), max = Math.max(...vals), range = max - min || 1;
+  const W = 500, H = 56, p = 3;
+  const pts = entries.map(([,v], i) =>
+    `${(p + (i / (entries.length - 1)) * (W - 2*p)).toFixed(1)},${(p + (1 - (v - min) / range) * (H - 2*p)).toFixed(1)}`
+  ).join(' ');
+  const gain = vals[vals.length - 1] - vals[0];
+  const gainPct = vals[0] ? (gain / vals[0]) * 100 : 0;
+  const col = gain >= 0 ? 'var(--accent)' : 'var(--red)';
+  return `<div class="port-chart-wrap">
+    <div class="port-chart-meta">
+      <span>${entries.length}d history</span>
+      <span class="${gain >= 0 ? 'p-gain' : 'p-loss'}">${fmtPct(gainPct)} · ${fmtSgn(gain)}</span>
+    </div>
+    <svg class="port-chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+  </div>`;
+}
+// ─── INDEXED DB CACHE ─────────────────────────────────────────────────────────
+const IDB = (() => {
+  let _db = null;
+  const open = () => new Promise((res, rej) => {
+    if (_db) return res(_db);
+    const r = indexedDB.open('huozi', 1);
+    r.onupgradeneeded = () => {
+      r.result.createObjectStore('articles', { keyPath: 'id' });
+      r.result.createObjectStore('meta');
+    };
+    r.onsuccess = () => { _db = r.result; res(_db); };
+    r.onerror   = () => rej(r.error);
+  });
+  return {
+    putAll: async articles => {
+      const db = await open();
+      const tx = db.transaction('articles', 'readwrite');
+      const st = tx.objectStore('articles');
+      articles.forEach(a => st.put({ ...a, _ts: Date.now() }));
+      return new Promise(r => { tx.oncomplete = r; });
+    },
+    getRecent: async (maxMs = 7200000) => {
+      const db = await open();
+      return new Promise(res => {
+        const r = db.transaction('articles').objectStore('articles').getAll();
+        r.onsuccess = () => res(
+          r.result.filter(a => Date.now() - a._ts < maxMs).map(({ _ts, ...a }) => a)
+        );
+      });
+    },
+  };
+})();
 // ─── SECTION STATE ────────────────────────────────────────────────────────────
 const M = {
   portfolio: JSON.parse(localStorage.getItem('px_portfolio') || '[]'),
@@ -641,7 +760,12 @@ buildSidebar();
 document.getElementById('feed-name').textContent = '';
 document.getElementById('btn-unread').classList.toggle('on', S.unread);
 document.getElementById('btn-compact').classList.toggle('on', S.compact);
-loadCategory('world-news');
+loadCategory('world-news').then(() => {
+  // Background-load all remaining categories so every source is available
+  ['tech','science','humanities','economics','investment'].forEach(cat => {
+    loadCategory(cat, true);
+  });
+});
 
 // ─── NEWS CATEGORY FILTER ─────────────────────────────────────────────────────
 function setNewsCat(nc) {
@@ -820,6 +944,17 @@ function _renderPortfolioTable(priceMap) {
       <div class="port-card-sub ${gainCls(totalGLPct)}">${fmtPct(totalGLPct)}</div></div>
     <div class="port-card"><div class="port-card-label">holdings</div>
       <div class="port-card-value">${M.portfolio.length}</div></div>`;
+  // Daily snapshot for history chart
+  if (totalValue > 0) {
+    const today = new Date().toISOString().slice(0, 10);
+    const hist = JSON.parse(localStorage.getItem('px_port_history') || '{}');
+    hist[today] = totalValue;
+    const cutoff = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+    for (const d of Object.keys(hist)) if (d < cutoff) delete hist[d];
+    localStorage.setItem('px_port_history', JSON.stringify(hist));
+  }
+  const chartEl = document.getElementById('port-chart');
+  if (chartEl) chartEl.innerHTML = _renderPortfolioChart();
   // Allocation bars
   const allocRows = rows.filter(r => r.value != null).sort((a,b) => b.value - a.value);
   if (totalValue > 0 && allocRows.length) {
@@ -995,6 +1130,7 @@ async function refreshWatchlistPrices() {
     _updateWLRow(t, p);
     _checkAlerts(t, p);
   }));
+  _renderWLTable();
 }
 function addToWatchlist() {
   const ticker = (document.getElementById('wl-ticker-in').value || '').trim().toUpperCase();
@@ -1154,3 +1290,39 @@ function renderSources() {
 document.getElementById('wl-ticker-in').addEventListener('keydown', e => {
   if (e.key === 'Enter') addToWatchlist();
 });
+// ─── SWIPE GESTURES ──────────────────────────────────────────────────────────
+(function () {
+  let sx = 0, sy = 0, swipeTarget = null;
+  function onStart(e) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }
+  function isSwipe(e) {
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    return Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 2 ? dx : 0;
+  }
+  // Article list: swipe right → open that article; swipe left → next article
+  const artEl = document.getElementById('articles');
+  artEl.addEventListener('touchstart', e => { onStart(e); swipeTarget = e.target.closest('.article'); }, { passive: true });
+  artEl.addEventListener('touchend', e => {
+    const dx = isSwipe(e);
+    if (!dx) return;
+    if (dx > 0 && swipeTarget?.dataset.id) openReader(swipeTarget.dataset.id);
+    else if (dx < 0 && S.active) navArticle(1);
+  }, { passive: true });
+  // Reader: swipe left → close
+  const rdrEl = document.getElementById('reader');
+  rdrEl.addEventListener('touchstart', onStart, { passive: true });
+  rdrEl.addEventListener('touchend', e => { if (isSwipe(e) < 0) closeReader(); }, { passive: true });
+})();
+// ─── SERVICE WORKER ──────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+// ─── STARTUP: load cached articles for instant render ────────────────────────
+IDB.getRecent().then(cached => {
+  if (!cached.length || S.articles.length) return; // skip if fresh data already arrived
+  S.articles = cached;
+  S.articles.sort((a, b) => b.date - a.date);
+  document.getElementById('c-all').textContent = S.articles.length;
+  document.getElementById('updated').textContent = 'from cache';
+  updateStats(); render();
+}).catch(() => {});
