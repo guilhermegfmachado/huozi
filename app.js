@@ -1318,7 +1318,7 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 // ─── STARTUP: load cached articles for instant render ────────────────────────
-IDB.getRecent().then(cached => {
+IDB.getRecent(86400000).then(cached => { // show up to 24h old cache for instant render
   if (!cached.length || S.articles.length) return; // skip if fresh data already arrived
   S.articles = cached;
   S.articles.sort((a, b) => b.date - a.date);
