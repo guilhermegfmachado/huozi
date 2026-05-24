@@ -760,11 +760,43 @@ buildSidebar();
 document.getElementById('feed-name').textContent = '';
 document.getElementById('btn-unread').classList.toggle('on', S.unread);
 document.getElementById('btn-compact').classList.toggle('on', S.compact);
-loadCategory('world-news').then(() => {
-  // Background-load all remaining categories so every source is available
-  ['tech','science','humanities','economics','investment'].forEach(cat => {
-    loadCategory(cat, true);
-  });
+
+// ─── STATIC FEED DATA (GitHub Actions pre-fetched) ───────────────────────────
+async function tryStaticFeeds() {
+  try {
+    const r = await fetch('./data/feeds.json?v=' + Date.now());
+    if (!r.ok) return false;
+    const d = await r.json();
+    const age = Date.now() - new Date(d.updated).getTime();
+    if (age > 3600000 || !Object.keys(d.feeds).length) return false; // stale or empty
+    S.articles = []; S.counts = {};
+    for (const [feedId, items] of Object.entries(d.feeds)) {
+      const feed = FEEDS.find(f => f.id === feedId);
+      if (!feed) continue;
+      const mapped = _mapItems(items, feed);
+      S.counts[feedId] = mapped.length;
+      S.fetchedCats.add(feed.cat);
+      const el = document.getElementById('c-' + feedId);
+      if (el) { el.textContent = mapped.length || '·'; el.classList.remove('failed'); }
+      S.articles.push(...mapped);
+    }
+    if (!S.articles.length) return false;
+    S.articles.sort((a, b) => b.date - a.date);
+    document.getElementById('c-all').textContent = S.articles.length;
+    document.getElementById('updated').textContent = relativeTime(new Date(d.updated));
+    updateStats(); render();
+    IDB.putAll(S.articles).catch(() => {});
+    return true;
+  } catch { return false; }
+}
+
+tryStaticFeeds().then(loaded => {
+  if (!loaded) {
+    // Static data unavailable — fall back to CORS proxy cascade
+    loadCategory('world-news').then(() => {
+      ['tech','science','humanities','economics','investment'].forEach(cat => loadCategory(cat, true));
+    });
+  }
 });
 
 // ─── NEWS CATEGORY FILTER ─────────────────────────────────────────────────────
