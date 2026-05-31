@@ -3,12 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>活字</title>
+  <title>活字 — World Press</title>
   <meta name="description" content="活字 — world press. Quality journalism from 65 outlets in 10 languages.">
   <meta name="theme-color" content="#0c0c0c" id="meta-theme-color">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="活字">
+  <!-- Open Graph -->
+  <meta property="og:title" content="活字 — World Press">
+  <meta property="og:description" content="Quality journalism from 65 outlets in 10 languages.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://guilhermegfmachado.github.io/huozi/">
+  <!-- Canonical -->
+  <link rel="canonical" href="https://guilhermegfmachado.github.io/huozi/">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="favicon.svg">
   <link rel="manifest" href="manifest.json">
@@ -19,22 +26,23 @@
 </head>
 <body>
 <div id="topbar">
-  <button id="mob-toggle" onclick="toggleMobileSidebar()">☰</button>
-  <div id="wordmark">活字</div>
+  <button id="mob-toggle" onclick="toggleMobileSidebar()" aria-label="Open navigation">☰</button>
+  <div id="wordmark" aria-label="活字">活字</div>
   <div id="search-wrap">
-    <input type="search" id="search" placeholder="search headlines…" autocomplete="off">
+    <label for="search" class="sr-only">Search headlines</label>
+    <input type="search" id="search" placeholder="search headlines…" autocomplete="off" aria-label="Search headlines">
   </div>
   <div id="topbar-right">
-    <div id="pulse"></div>
-    <div id="updated">—</div>
-    <button class="t-btn" id="btn-refresh" onclick="doRefresh()">↺ refresh</button>
-    <button class="t-btn" id="btn-unread" onclick="toggleUnread()">unread</button>
+    <div id="pulse" aria-hidden="true"></div>
+    <div id="updated" aria-live="polite">—</div>
+    <button class="t-btn" id="btn-refresh" onclick="doRefresh()" aria-label="Refresh feeds">↺ refresh</button>
+    <button class="t-btn" id="btn-unread" onclick="toggleUnread()" aria-pressed="false">unread</button>
     <button class="t-btn" id="btn-mark-read" onclick="markAllRead()" title="mark visible articles as read">mark read</button>
-    <button class="t-btn" id="btn-compact" onclick="toggleCompact()">compact</button>
-    <button class="t-btn" id="btn-theme" onclick="toggleTheme()" title="toggle light/dark">◑</button>
+    <button class="t-btn" id="btn-compact" onclick="toggleCompact()" aria-pressed="false">compact</button>
+    <button class="t-btn" id="btn-theme" onclick="toggleTheme()" aria-label="Toggle light/dark theme">◑</button>
   </div>
 </div>
-<div id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+<div id="sidebar-overlay" onclick="toggleMobileSidebar()" role="button" aria-label="Close navigation" tabindex="-1"></div>
 <div id="layout">
   <div id="sidebar">
     <div class="sb-section" style="border-bottom: 1px solid var(--border-soft);">
@@ -128,19 +136,19 @@
         <div class="add-form" id="port-form">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">ticker</label>
+              <label class="form-label" for="pf-ticker">ticker</label>
               <input class="form-input" id="pf-ticker" placeholder="e.g. VWCE.AS" style="text-transform:uppercase">
             </div>
             <div class="form-group">
-              <label class="form-label">shares</label>
+              <label class="form-label" for="pf-shares">shares</label>
               <input class="form-input" id="pf-shares" type="number" placeholder="10" min="0" step="any">
             </div>
             <div class="form-group">
-              <label class="form-label">avg cost (€)</label>
+              <label class="form-label" for="pf-cost">avg cost (€)</label>
               <input class="form-input" id="pf-cost" type="number" placeholder="145.00" min="0" step="any">
             </div>
             <div class="form-group">
-              <label class="form-label">date</label>
+              <label class="form-label" for="pf-date">date</label>
               <input class="form-input wide" id="pf-date" type="date">
             </div>
             <button class="form-btn primary" onclick="addHolding()">+ add</button>
@@ -181,7 +189,8 @@
       </div>
       <div class="sec-body">
         <div class="wl-add-row">
-          <input class="form-input wide" id="wl-ticker-in" placeholder="add ticker (e.g. NVO)" style="text-transform:uppercase">
+          <label for="wl-ticker-in" class="sr-only">Add ticker</label>
+          <input class="form-input wide" id="wl-ticker-in" placeholder="add ticker (e.g. NVO)" style="text-transform:uppercase" aria-label="Add ticker to watchlist">
           <button class="form-btn primary" onclick="addToWatchlist()">+ add</button>
         </div>
         <div class="tbl-wrap">
@@ -203,15 +212,15 @@
         <div id="alert-form" class="add-form" style="margin-top:1rem">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">ticker</label>
+              <label class="form-label" for="al-ticker">ticker</label>
               <input class="form-input" id="al-ticker" readonly>
             </div>
             <div class="form-group">
-              <label class="form-label">target price</label>
+              <label class="form-label" for="al-price">target price</label>
               <input class="form-input" id="al-price" type="number" step="any" placeholder="90.00">
             </div>
             <div class="form-group">
-              <label class="form-label">direction</label>
+              <label class="form-label" for="al-dir">direction</label>
               <select class="filter-select" id="al-dir">
                 <option value="below">below</option>
                 <option value="above">above</option>
@@ -237,14 +246,14 @@
         <div class="screener-filters">
           <div class="filter-row">
             <div class="filter-group">
-              <label class="filter-label">tickers (comma-separated)</label>
+              <label class="filter-label" for="scr-tickers">tickers (comma-separated)</label>
               <input class="form-input" id="scr-tickers" style="width:380px"
                 placeholder="AAPL, MSFT, VWCE.AS, NVO, 2330.TW" value="AAPL,MSFT,NVDA,NVO,LLY,FCX,VWCE.AS,2330.TW,INDA">
             </div>
           </div>
           <div class="filter-row">
             <div class="filter-group">
-              <label class="filter-label">market cap</label>
+              <label class="filter-label" for="scr-cap">market cap</label>
               <select class="filter-select" id="scr-cap">
                 <option value="">any</option>
                 <option value="large">large (&gt;$10B)</option>
@@ -253,15 +262,15 @@
               </select>
             </div>
             <div class="filter-group">
-              <label class="filter-label">p/e min</label>
+              <label class="filter-label" for="scr-pe-min">p/e min</label>
               <input class="filter-input" id="scr-pe-min" type="number" placeholder="0">
             </div>
             <div class="filter-group">
-              <label class="filter-label">p/e max</label>
+              <label class="filter-label" for="scr-pe-max">p/e max</label>
               <input class="filter-input" id="scr-pe-max" type="number" placeholder="100">
             </div>
             <div class="filter-group">
-              <label class="filter-label">change %</label>
+              <label class="filter-label" for="scr-change">change %</label>
               <select class="filter-select" id="scr-change">
                 <option value="">any</option>
                 <option value="up">up today</option>
@@ -349,7 +358,7 @@
     <div id="tt-notes"></div>
   </div>
 </div>
-<script src="feeds.js"></script>
-<script src="app.js"></script>
+<script src="feeds.js" defer></script>
+<script src="app.js" defer></script>
 </body>
 </html>

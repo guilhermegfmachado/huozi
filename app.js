@@ -456,8 +456,8 @@ function markAllRead() {
   visible().forEach(a => S.read.add(a.id));
   saveRead(); updateStats(); render();
 }
-function toggleUnread()  { S.unread=!S.unread;  localStorage.setItem('huozi-unread',S.unread);  document.getElementById('btn-unread').classList.toggle('on',S.unread);  render(); }
-function toggleCompact() { S.compact=!S.compact; localStorage.setItem('huozi-compact',S.compact); document.getElementById('btn-compact').classList.toggle('on',S.compact); render(); }
+function toggleUnread()  { S.unread=!S.unread;  localStorage.setItem('huozi-unread',S.unread);  const u=document.getElementById('btn-unread');  u.classList.toggle('on',S.unread);  u.setAttribute('aria-pressed',S.unread);  render(); }
+function toggleCompact() { S.compact=!S.compact; localStorage.setItem('huozi-compact',S.compact); const c=document.getElementById('btn-compact'); c.classList.toggle('on',S.compact); c.setAttribute('aria-pressed',S.compact); render(); }
 function doRefresh() { refresh(); }
 function updateStats() {
   ['st-a','st-s','st-l'].forEach(id => document.getElementById(id).classList.remove('stat-loading'));
@@ -591,7 +591,9 @@ function toggleMobileSidebar() {
   const ov = document.getElementById('sidebar-overlay');
   const open = sb.classList.toggle('open');
   ov.classList.toggle('open', open);
-  document.getElementById('mob-toggle').textContent = open ? '✕' : '☰';
+  const tog = document.getElementById('mob-toggle');
+  tog.textContent = open ? '✕' : '☰';
+  tog.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
 }
 // ─── SOURCE TOOLTIP ─────────────────────────────────────────────────────────────
 function showTooltip(e, feedId) {
