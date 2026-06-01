@@ -66,7 +66,12 @@ async function main() {
     await Promise.all(batch.map(async (f) => {
       const items = await fetchFeed(f);
       if (items) {
-        results[f.id] = items;
+        // Cap to the 18 most-recent items and trim long descriptions — keeps the
+        // published feeds.json small (~400KB vs 2MB+) so the client loads fast.
+        results[f.id] = items.slice(0, 18).map(i => ({
+          ...i,
+          description: (i.description || '').slice(0, 500),
+        }));
         ok++;
         process.stdout.write(`  ✓ ${f.name} (${items.length})\n`);
       } else {
