@@ -240,12 +240,15 @@ function _mapItems(items, f) {
 }
 async function fetchOne(f) {
   for (const proxy of PROXY_LIST) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
     try {
-      const r = await fetch(proxy.build(f.url));
+      const r = await fetch(proxy.build(f.url), { signal: ctrl.signal });
+      clearTimeout(timer);
       if (!r.ok) continue;
       const items = await proxy.parse(r);
       return _mapItems(items, f);
-    } catch { continue; }
+    } catch { clearTimeout(timer); continue; }
   }
   return null; // all proxies failed
 }
@@ -651,10 +654,8 @@ document.addEventListener('keydown', e => {
 });
 // ─── THEME ────────────────────────────────────────────────────────────────────
 function initTheme() {
-  const saved = localStorage.getItem('px_theme');
-  const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  const theme = saved || preferred;
-  document.documentElement.setAttribute('data-theme', theme);
+  // Theme already applied by inline script in <head> — just sync the button
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
   document.getElementById('btn-theme').textContent = theme === 'dark' ? '☀' : '◑';
   document.getElementById('meta-theme-color')?.setAttribute('content', theme === 'dark' ? '#0c0c0c' : '#f7f5f0');
 }
@@ -760,17 +761,31 @@ function flashTimestamp(el) {
 initTheme();
 buildSidebar();
 document.getElementById('feed-name').textContent = '';
-document.getElementById('btn-unread').classList.toggle('on', S.unread);
-document.getElementById('btn-compact').classList.toggle('on', S.compact);
+const _btnU = document.getElementById('btn-unread');
+_btnU.classList.toggle('on', S.unread); _btnU.setAttribute('aria-pressed', S.unread);
+const _btnC = document.getElementById('btn-compact');
+_btnC.classList.toggle('on', S.compact); _btnC.setAttribute('aria-pressed', S.compact);
 
 // ─── STATIC FEED DATA (GitHub Actions pre-fetched) ───────────────────────────
+let _proxyStarted = false;
+function _startProxies() {
+  if (_proxyStarted || S.articles.length) return;
+  _proxyStarted = true;
+  loadCategory('world-news').then(() => {
+    ['tech','science','humanities','economics','investment'].forEach(cat => loadCategory(cat, true));
+  });
+}
 async function tryStaticFeeds() {
   try {
-    const r = await fetch('./data/feeds.json?v=' + Date.now());
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3000);
+    const r = await fetch('./data/feeds.json?v=' + Date.now(), { signal: ctrl.signal });
+    clearTimeout(timer);
     if (!r.ok) return false;
     const d = await r.json();
     const age = Date.now() - new Date(d.updated).getTime();
-    if (age > 3600000 || !Object.keys(d.feeds).length) return false; // stale or empty
+    if (age > 3600000 || !Object.keys(d.feeds).length) return false;
+    if (_proxyStarted) return false; // proxies already running — avoid conflict
     S.articles = []; S.counts = {};
     for (const [feedId, items] of Object.entries(d.feeds)) {
       const feed = FEEDS.find(f => f.id === feedId);
@@ -791,14 +806,11 @@ async function tryStaticFeeds() {
     return true;
   } catch { return false; }
 }
-
+// Start proxy cascade after 400ms if static data hasn't arrived yet
+const _proxyTimer = setTimeout(_startProxies, 400);
 tryStaticFeeds().then(loaded => {
-  if (!loaded) {
-    // Static data unavailable — fall back to CORS proxy cascade
-    loadCategory('world-news').then(() => {
-      ['tech','science','humanities','economics','investment'].forEach(cat => loadCategory(cat, true));
-    });
-  }
+  clearTimeout(_proxyTimer);
+  if (!loaded) _startProxies();
 });
 
 // ─── NEWS CATEGORY FILTER ─────────────────────────────────────────────────────
