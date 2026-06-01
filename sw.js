@@ -1,4 +1,4 @@
-const CACHE = 'huozi-v2';
+const CACHE = 'huozi-v3';
 const SHELL = ['./', './index.html', './style.css', './app.js', './feeds.js', './favicon.svg', './manifest.json'];
 
 self.addEventListener('install', e => {

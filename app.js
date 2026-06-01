@@ -64,6 +64,7 @@ const S = {
   fetchedCats: new Set(),
   cache: {},
   newsCat: 'all',
+  updatedAt: null,
 };
 const saveSaved = () => localStorage.setItem('px_saved', JSON.stringify([...S.saved]));
 const saveRead  = () => localStorage.setItem('px_read',  JSON.stringify([...S.read]));
@@ -224,6 +225,31 @@ function updateLoadingText() {
     row.innerHTML = `<div class="spinner"></div> fetching feeds… ${loadProgress.done} / ${loadProgress.total}`;
   }
 }
+// ─── LOADING / FRESHNESS INDICATOR ───────────────────────────────────────────
+// The top-bar dot reflects real state: amber-blink while fetching, solid green
+// when data is live, calm grey at rest — no more permanent "loading" blink.
+let _inflight = 0;
+function loadStart() { _inflight++; refreshPulse(); }
+function loadEnd()   { _inflight = Math.max(0, _inflight - 1); refreshPulse(); }
+function refreshPulse() {
+  const pulse = document.getElementById('pulse');
+  const upd   = document.getElementById('updated');
+  if (!pulse) return;
+  if (_inflight > 0) {
+    pulse.className = 'loading';
+    if (upd && !S.updatedAt) upd.textContent = 'loading…';
+  } else {
+    pulse.className = S.updatedAt ? 'live' : '';
+    if (upd && S.updatedAt) upd.textContent = relativeTime(new Date(S.updatedAt));
+  }
+}
+function updateFeedInfo() {
+  if (M.currentSection) return;
+  const el = document.getElementById('feed-info');
+  if (el && S.feed === 'all') {
+    el.textContent = `${S.articles.length} articles · ${new Set(S.articles.map(a => a.feedId)).size} sources`;
+  }
+}
 // ─── FETCH ───────────────────────────────────────────────────────────────────
 const stripHtml = s => { const d = document.createElement('div'); d.innerHTML = s; return (d.textContent||'').replace(/\s+/g,' ').trim(); };
 function _mapItems(items, f) {
@@ -255,6 +281,7 @@ async function fetchOne(f) {
 // Priority feeds loaded first for fast initial render
 const PRIORITY = new Set(['bbc','guardian','nyt','ap','aljazeera','dw','ft','nhk']);
 async function fetchBatch(feeds, trackProgress = false) {
+  loadStart();
   const promises = feeds.map(f =>
     fetchOne(f).then(items => {
       if (trackProgress) { loadProgress.done++; updateLoadingText(); }
@@ -282,9 +309,9 @@ async function fetchBatch(feeds, trackProgress = false) {
   S.articles.push(...newArticles);
   S.articles.sort((a,b) => b.date - a.date);
   IDB.putAll(newArticles).catch(() => {});
+  S.updatedAt = Date.now();
   document.getElementById('c-all').textContent = S.articles.length;
-  document.getElementById('updated').textContent = 'updated just now';
-  updateStats(); render();
+  updateStats(); render(); updateFeedInfo(); loadEnd();
 }
 async function loadCategory(cat, silent = false) {
   if (S.fetchedCats.has(cat) && cat !== 'all') return;
@@ -321,6 +348,15 @@ function refresh() {
 }
 // ─── RENDER ───────────────────────────────────────────────────────────────────
 const CATS = new Set(['world-news','tech','science','humanities','economics','investment']);
+// Topic chips → feed categories. Geography (Asia, China, …) lives in the sidebar,
+// so the top row stays one consistent dimension instead of mixing topic + place.
+const NEWSCAT_CATS = {
+  'world-news': ['world-news'],
+  'business':   ['economics', 'investment'],
+  'tech':       ['tech'],
+  'science':    ['science'],
+  'culture':    ['humanities'],
+};
 function visible() {
   let a = S.articles;
   if (S.feed === 'saved') {
@@ -332,13 +368,10 @@ function visible() {
   } else {
     a = a.filter(x => x.feedId === S.feed);
   }
-  // News category filter
+  // Topic filter (chips) — maps to one or more feed categories
   if (S.newsCat && S.newsCat !== 'all') {
-    const ASIA_CC = new Set(['JP','KR','CN','HK','SG','IN','TW','MY','TH','ID','PH','VN','AU','NZ']);
-    if (S.newsCat === 'general')    a = a.filter(x => x.cat !== 'investment');
-    else if (S.newsCat === 'investment') a = a.filter(x => x.cat === 'investment');
-    else if (S.newsCat === 'asia')  a = a.filter(x => ASIA_CC.has(x.cc) || x.region === 'Asia-Pacific' || x.region === 'Asia');
-    else if (S.newsCat === 'china') a = a.filter(x => x.cc === 'CN' || x.cc === 'HK' || x.region === 'China');
+    const cats = NEWSCAT_CATS[S.newsCat];
+    if (cats) a = a.filter(x => cats.includes(x.cat));
   }
   if (S.unread) a = a.filter(x => !S.read.has(x.id));
   if (S.query) { const q=S.query.toLowerCase(); a = a.filter(x => x.title.toLowerCase().includes(q)||x.desc.toLowerCase().includes(q)); }
@@ -766,27 +799,33 @@ _btnU.classList.toggle('on', S.unread); _btnU.setAttribute('aria-pressed', S.unr
 const _btnC = document.getElementById('btn-compact');
 _btnC.classList.toggle('on', S.compact); _btnC.setAttribute('aria-pressed', S.compact);
 
-// ─── STATIC FEED DATA (GitHub Actions pre-fetched) ───────────────────────────
-let _proxyStarted = false;
-function _startProxies() {
-  if (_proxyStarted || S.articles.length) return;
-  _proxyStarted = true;
-  loadCategory('world-news').then(() => {
-    ['tech','science','humanities','economics','investment'].forEach(cat => loadCategory(cat, true));
-  });
+// ─── STARTUP: cache paint → static file → fill gaps → proxy fallback ─────────
+// 1. Instant paint from IndexedDB cache (no network) so the page is never blank.
+async function paintFromCache() {
+  try {
+    const cached = await IDB.getRecent(86400000); // up to 24h old
+    if (!cached.length || S.articles.length) return;
+    S.articles = cached.sort((a, b) => b.date - a.date);
+    document.getElementById('c-all').textContent = S.articles.length;
+    updateStats(); render(); updateFeedInfo();
+  } catch {}
 }
+// 2. Load the GitHub-Actions pre-fetched file. Same-origin + conditional cache
+//    (no Date.now() buster) means repeat visits revalidate cheaply (304) instead
+//    of re-downloading the whole payload every time.
+let _staticLoaded = false;
 async function tryStaticFeeds() {
+  loadStart();
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 3000);
-    const r = await fetch('./data/feeds.json?v=' + Date.now(), { signal: ctrl.signal });
+    const timer = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('./data/feeds.json', { cache: 'no-cache', signal: ctrl.signal });
     clearTimeout(timer);
     if (!r.ok) return false;
     const d = await r.json();
     const age = Date.now() - new Date(d.updated).getTime();
-    if (age > 3600000 || !Object.keys(d.feeds).length) return false;
-    if (_proxyStarted) return false; // proxies already running — avoid conflict
-    S.articles = []; S.counts = {};
+    if (age > 5400000 || !Object.keys(d.feeds).length) return false; // >90 min ⇒ stale
+    const fresh = [];
     for (const [feedId, items] of Object.entries(d.feeds)) {
       const feed = FEEDS.find(f => f.id === feedId);
       if (!feed) continue;
@@ -795,29 +834,49 @@ async function tryStaticFeeds() {
       S.fetchedCats.add(feed.cat);
       const el = document.getElementById('c-' + feedId);
       if (el) { el.textContent = mapped.length || '·'; el.classList.remove('failed'); }
-      S.articles.push(...mapped);
+      fresh.push(...mapped);
     }
-    if (!S.articles.length) return false;
+    if (!fresh.length) return false;
+    // Fresh server data is authoritative; keep any cache-painted extras, deduped.
+    const seen = new Set();
+    S.articles = fresh.concat(S.articles).filter(a => {
+      const k = a.title.toLowerCase().slice(0, 50);
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
     S.articles.sort((a, b) => b.date - a.date);
+    S.updatedAt = new Date(d.updated).getTime();
+    _staticLoaded = true;
     document.getElementById('c-all').textContent = S.articles.length;
-    document.getElementById('updated').textContent = relativeTime(new Date(d.updated));
-    updateStats(); render();
-    IDB.putAll(S.articles).catch(() => {});
+    updateStats(); render(); updateFeedInfo();
+    IDB.putAll(fresh).catch(() => {});
     return true;
   } catch { return false; }
+  finally { loadEnd(); }
 }
-// Start proxy cascade after 400ms if static data hasn't arrived yet
-const _proxyTimer = setTimeout(_startProxies, 400);
-tryStaticFeeds().then(loaded => {
-  clearTimeout(_proxyTimer);
-  if (!loaded) _startProxies();
-});
+// 3. Some sources fail server-side — fetch just those via the proxy cascade,
+//    quietly in the background, so coverage approaches 100% without blocking paint.
+function backgroundFillMissing() {
+  const missing = FEEDS.filter(f => !S.counts[f.id] || S.counts[f.id] < 1);
+  if (missing.length) fetchBatch(missing); // silent; merges + dedups
+}
+// 4. No usable static data at all → full proxy cascade (priority first).
+function fullProxyFallback() {
+  if (S.fetchedCats.has('world-news')) return;
+  loadCategory('world-news').then(() => {
+    ['tech','science','humanities','economics','investment'].forEach(c => loadCategory(c, true));
+  });
+}
+paintFromCache();
+tryStaticFeeds().then(ok => { if (ok) backgroundFillMissing(); else fullProxyFallback(); });
 
 // ─── NEWS CATEGORY FILTER ─────────────────────────────────────────────────────
 function setNewsCat(nc) {
   S.newsCat = nc;
   document.querySelectorAll('.cat-chip').forEach(el =>
     el.classList.toggle('on', el.dataset.nc === nc));
+  // Pull in the underlying categories on demand if they aren't loaded yet
+  (NEWSCAT_CATS[nc] || []).forEach(c => { if (!S.fetchedCats.has(c)) loadCategory(c, true); });
   render();
 }
 
@@ -1363,12 +1422,4 @@ document.getElementById('wl-ticker-in').addEventListener('keydown', e => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
-// ─── STARTUP: load cached articles for instant render ────────────────────────
-IDB.getRecent(86400000).then(cached => { // show up to 24h old cache for instant render
-  if (!cached.length || S.articles.length) return; // skip if fresh data already arrived
-  S.articles = cached;
-  S.articles.sort((a, b) => b.date - a.date);
-  document.getElementById('c-all').textContent = S.articles.length;
-  document.getElementById('updated').textContent = 'from cache';
-  updateStats(); render();
-}).catch(() => {});
+// (startup cache paint handled by paintFromCache() above)
