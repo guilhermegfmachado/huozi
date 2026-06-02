@@ -1049,11 +1049,12 @@ function _renderPortfolioTable(priceMap) {
     const bv = b[col] ?? (dir > 0 ? Infinity : -Infinity);
     return (typeof av === 'string' ? av.localeCompare(bv) : av - bv) * dir;
   });
-  const totalGL    = totalValue - totalCost;
-  const totalGLPct = totalCost ? (totalGL / totalCost) * 100 : 0;
+  const hasPrices  = rows.some(r => r.price != null);
+  const totalGL    = hasPrices ? totalValue - totalCost : null;
+  const totalGLPct = hasPrices && totalCost ? (totalGL / totalCost) * 100 : null;
   summary.innerHTML = `
     <div class="port-card"><div class="port-card-label">total value</div>
-      <div class="port-card-value">${totalValue ? fmt(totalValue) : '—'}</div></div>
+      <div class="port-card-value">${hasPrices ? fmt(totalValue) : '—'}</div></div>
     <div class="port-card"><div class="port-card-label">total cost</div>
       <div class="port-card-value">${fmt(totalCost)}</div></div>
     <div class="port-card"><div class="port-card-label">gain / loss</div>
@@ -1097,7 +1098,7 @@ function _renderPortfolioTable(priceMap) {
       <button class="tbl-act-btn" onclick="deleteHolding('${r.id}')" title="remove">✕</button>
     </td></tr>`).join('');
   document.getElementById('port-info').textContent =
-    `${M.portfolio.length} holdings · ${totalValue ? fmt(totalValue) : '—'}`;
+    `${M.portfolio.length} holdings${hasPrices ? ' · ' + fmt(totalValue) : ''}`;
   document.querySelectorAll('#port-table th').forEach(th => {
     th.classList.remove('sorted');
     const oc = th.getAttribute('onclick') || '';
