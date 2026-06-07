@@ -921,63 +921,74 @@ function toggleAddForm(id) {
 
 // ─── PRICE FETCHING ───────────────────────────────────────────────────────────
 const priceCache = {};
+
+// Yahoo Finance blocks direct browser CORS — try direct first, then fall back to
+// two public CORS proxies so prices load in all environments.
+async function _fetchJson(url) {
+  // 1. Direct (works when YF sends CORS headers, which is inconsistent)
+  try { const r = await fetch(url); if (r.ok) return await r.json(); } catch {}
+  // 2. corsproxy.io — passes response through unchanged
+  try {
+    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+    if (r.ok) return await r.json();
+  } catch {}
+  // 3. allorigins.win — wraps response in {contents:"..."}
+  try {
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    if (r.ok) { const d = await r.json(); return JSON.parse(d.contents); }
+  } catch {}
+  return null;
+}
+
 async function fetchPrice(ticker) {
   const key = ticker.toUpperCase();
   const cached = priceCache[key];
   if (cached && Date.now() - cached.ts < 300000) return cached.data;
-  const urls = [
-    `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`,
-    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`,
-  ];
-  for (const url of urls) {
-    try {
-      const r = await fetch(url);
-      if (!r.ok) continue;
-      const d = await r.json();
-      const result = d.chart?.result?.[0];
-      if (!result) continue;
-      const meta = result.meta;
-      const price = meta.regularMarketPrice ?? meta.previousClose ?? null;
-      const prev  = meta.chartPreviousClose ?? meta.previousClose ?? price;
-      const data  = {
-        price, prevClose: prev,
-        change: price != null && prev != null ? price - prev : null,
-        changePct: price != null && prev ? ((price - prev) / prev) * 100 : null,
-        high52: meta.fiftyTwoWeekHigh ?? null,
-        low52:  meta.fiftyTwoWeekLow  ?? null,
-        currency: meta.currency || 'USD',
-        name: meta.longName || meta.shortName || key,
-      };
-      priceCache[key] = { ts: Date.now(), data };
-      return data;
-    } catch { /* try next */ }
-  }
-  return null;
+  const d = await _fetchJson(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`
+  ) || await _fetchJson(
+    `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`
+  );
+  if (!d) return null;
+  const result = d.chart?.result?.[0];
+  if (!result) return null;
+  const meta = result.meta;
+  const price = meta.regularMarketPrice ?? meta.previousClose ?? null;
+  const prev  = meta.chartPreviousClose ?? meta.previousClose ?? price;
+  const data  = {
+    price, prevClose: prev,
+    change:    price != null && prev != null ? price - prev : null,
+    changePct: price != null && prev ? ((price - prev) / prev) * 100 : null,
+    high52:    meta.fiftyTwoWeekHigh ?? null,
+    low52:     meta.fiftyTwoWeekLow  ?? null,
+    currency:  meta.currency || 'USD',
+    name:      meta.longName || meta.shortName || key,
+  };
+  priceCache[key] = { ts: Date.now(), data };
+  return data;
 }
 async function fetchFundamentals(ticker) {
   const key = ticker.toUpperCase();
   const ckey = key + '_fund';
   const cached = priceCache[ckey];
   if (cached && Date.now() - cached.ts < 300000) return cached.data;
-  try {
-    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(key)}?modules=price,summaryDetail`;
-    const r = await fetch(url);
-    if (!r.ok) throw 0;
-    const d = await r.json();
-    const res = d.quoteSummary?.result?.[0];
-    if (!res) throw 0;
-    const p = res.price || {}, s = res.summaryDetail || {};
-    const data = {
-      name: p.longName || p.shortName || key,
-      price: p.regularMarketPrice?.raw ?? null,
-      changePct: p.regularMarketChangePercent?.raw != null ? p.regularMarketChangePercent.raw * 100 : null,
-      marketCap: p.marketCap?.raw ?? null,
-      pe: s.trailingPE?.raw ?? null,
-      currency: p.currency || 'USD',
-    };
-    priceCache[ckey] = { ts: Date.now(), data };
-    return data;
-  } catch { return null; }
+  const d = await _fetchJson(
+    `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(key)}?modules=price,summaryDetail`
+  );
+  if (!d) return null;
+  const res = d.quoteSummary?.result?.[0];
+  if (!res) return null;
+  const p = res.price || {}, s = res.summaryDetail || {};
+  const data = {
+    name:      p.longName || p.shortName || key,
+    price:     p.regularMarketPrice?.raw ?? null,
+    changePct: p.regularMarketChangePercent?.raw != null ? p.regularMarketChangePercent.raw * 100 : null,
+    marketCap: p.marketCap?.raw ?? null,
+    pe:        s.trailingPE?.raw ?? null,
+    currency:  p.currency || 'USD',
+  };
+  priceCache[ckey] = { ts: Date.now(), data };
+  return data;
 }
 
 // ─── FORMATTING HELPERS ───────────────────────────────────────────────────────
@@ -1008,6 +1019,7 @@ async function renderPortfolio() {
     return;
   }
   const tickers = [...new Set(M.portfolio.map(h => h.ticker))];
+  if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:1.5rem;text-align:center;color:var(--text-dim)">loading prices…</td></tr>`;
   const priceMap = {};
   await Promise.all(tickers.map(async t => { priceMap[t] = await fetchPrice(t); }));
   M.prices = priceMap;
@@ -1037,11 +1049,12 @@ function _renderPortfolioTable(priceMap) {
     const bv = b[col] ?? (dir > 0 ? Infinity : -Infinity);
     return (typeof av === 'string' ? av.localeCompare(bv) : av - bv) * dir;
   });
-  const totalGL    = totalValue - totalCost;
-  const totalGLPct = totalCost ? (totalGL / totalCost) * 100 : 0;
+  const hasPrices  = rows.some(r => r.price != null);
+  const totalGL    = hasPrices ? totalValue - totalCost : null;
+  const totalGLPct = hasPrices && totalCost ? (totalGL / totalCost) * 100 : null;
   summary.innerHTML = `
     <div class="port-card"><div class="port-card-label">total value</div>
-      <div class="port-card-value">${totalValue ? fmt(totalValue) : '—'}</div></div>
+      <div class="port-card-value">${hasPrices ? fmt(totalValue) : '—'}</div></div>
     <div class="port-card"><div class="port-card-label">total cost</div>
       <div class="port-card-value">${fmt(totalCost)}</div></div>
     <div class="port-card"><div class="port-card-label">gain / loss</div>
@@ -1085,7 +1098,7 @@ function _renderPortfolioTable(priceMap) {
       <button class="tbl-act-btn" onclick="deleteHolding('${r.id}')" title="remove">✕</button>
     </td></tr>`).join('');
   document.getElementById('port-info').textContent =
-    `${M.portfolio.length} holdings · ${totalValue ? fmt(totalValue) : '—'}`;
+    `${M.portfolio.length} holdings${hasPrices ? ' · ' + fmt(totalValue) : ''}`;
   document.querySelectorAll('#port-table th').forEach(th => {
     th.classList.remove('sorted');
     const oc = th.getAttribute('onclick') || '';
