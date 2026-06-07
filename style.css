@@ -547,6 +547,20 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   /* Prevent iOS Safari from zooming in on input focus */
   #search, .form-input, .filter-select, .filter-input { font-size: 16px; }
+
+  /* Tighter article cards — show more headlines per screen */
+  .article { padding: 0.5rem 0.75rem; }
+  .a-meta { margin-bottom: 0.15rem; }
+  .a-title { font-size: 0.82rem; line-height: 1.38; }
+  .a-desc { -webkit-line-clamp: 1; }
+  .a-actions { margin-top: 0.2rem; }
+
+  /* Slim the feed bar — it only shows the feed name on mobile */
+  #feed-bar { height: 26px; padding: 0 0.7rem; }
+  #feed-name { font-size: 0.65rem; }
+
+  /* Footer wastes space on small screens */
+  #footer { display: none; }
 }
 /* ── SOURCE INFO TOOLTIP ─────────────────────────────── */
 .sb-item { position: relative; }
