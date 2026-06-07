@@ -385,9 +385,25 @@ function visible() {
   return a;
 }
 // ─── FEED ORDERING ────────────────────────────────────────────────────────────
+// Tier 1 — global wire services and newspapers of record (hard news priority)
+// Tier 2 — strong national papers and public broadcasters
+// Default  1.0 — general quality sources
+// < 1.0   — niche, curated, literary, or community aggregators
+const SOURCE_WEIGHT = {
+  reuters: 3.0, ap: 3.0, bbc: 2.8, nyt: 2.8, guardian: 2.5, economist: 2.5,
+  aljazeera: 2.5, ft: 2.5, dw: 2.2, nhk: 2.2, npr: 2.2, rfi: 2.0,
+  lemonde: 2.0, france24fr: 2.0, spiegel: 2.0, zeit: 1.8, nzz: 1.8,
+  letemps: 1.8, scmp: 1.8, straits: 1.8, nikkei: 1.8, haaretz: 1.8,
+  euronews: 1.6, dailymav: 1.6, folha: 1.5, lanacion: 1.5,
+  // niche / curated / literary — visible via their own category, not in "all" lead
+  aldaily: 0.4, laphams: 0.4, 'paris-rev': 0.45, aeon: 0.5, berfrois: 0.45,
+  lithub: 0.5, eurozine: 0.5, 'public-dom': 0.45, 'jstor-daily': 0.5, '3qd': 0.5,
+  hn: 0.6, schneier: 0.7,
+};
 function decayScore(article) {
   const hoursOld = (Date.now() - article.date) / 3_600_000;
-  return 1 / Math.pow(hoursOld + 2, 1.4);
+  const w = SOURCE_WEIGHT[article.feedId] ?? 1.0;
+  return w / Math.pow(hoursOld + 2, 1.4);
 }
 function interleave(articles) {
   const bySource = {};
