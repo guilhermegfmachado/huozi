@@ -265,18 +265,16 @@ function _mapItems(items, f) {
   }));
 }
 async function fetchOne(f) {
-  for (const proxy of PROXY_LIST) {
+  const tryProxy = proxy => {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 6000);
-    try {
-      const r = await fetch(proxy.build(f.url), { signal: ctrl.signal });
-      clearTimeout(timer);
-      if (!r.ok) continue;
-      const items = await proxy.parse(r);
-      return _mapItems(items, f);
-    } catch { clearTimeout(timer); continue; }
-  }
-  return null; // all proxies failed
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    return fetch(proxy.build(f.url), { signal: ctrl.signal })
+      .then(r => { clearTimeout(timer); if (!r.ok) throw new Error('not ok'); return proxy.parse(r); })
+      .then(items => _mapItems(items, f))
+      .catch(e => { clearTimeout(timer); throw e; });
+  };
+  // Race all proxies simultaneously — first winner is used, rest are cancelled via GC
+  return Promise.any(PROXY_LIST.map(tryProxy)).catch(() => null);
 }
 // Priority feeds loaded first for fast initial render
 const PRIORITY = new Set(['bbc','guardian','nyt','ap','aljazeera','dw','ft','nhk']);
@@ -840,7 +838,7 @@ async function tryStaticFeeds() {
     if (!r.ok) return false;
     const d = await r.json();
     const age = Date.now() - new Date(d.updated).getTime();
-    if (age > 5400000 || !Object.keys(d.feeds).length) return false; // >90 min ⇒ stale
+    if (age > 14400000 || !Object.keys(d.feeds).length) return false; // >4 h ⇒ stale
     const fresh = [];
     for (const [feedId, items] of Object.entries(d.feeds)) {
       const feed = FEEDS.find(f => f.id === feedId);
