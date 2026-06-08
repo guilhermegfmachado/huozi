@@ -520,30 +520,42 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 
 @media (max-width: 640px) {
-  /* Declutter topbar — only keep wordmark, search, theme */
-  #topbar { gap: 0.5rem; padding: 0 0.6rem; }
-  #topbar-right { gap: 0.4rem; }
+  /* Topbar: tighter padding, hide non-essential controls */
+  #topbar { gap: 0.4rem; padding: 0 0.6rem; }
+  #topbar-right { gap: 0.35rem; }
+  #wordmark { padding-right: 0.55rem; font-size: 0.9rem; }
   #pulse { display: none; }
   #updated { display: none; }
   #btn-unread { display: none; }
   #btn-mark-read { display: none; }
   #btn-compact { display: none; }
-  /* refresh stays visible on mobile — no keyboard shortcut alternative */
-  #search-wrap { max-width: none; }
+  #search-wrap { max-width: 160px; }
 
-  #feed-bar { gap: 0.4rem; padding: 0 0.7rem; }
-  #feed-name { font-size: 0.7rem; }
+  /* Feed bar: slim — only shows source name on mobile */
+  #feed-bar { height: 26px; gap: 0.4rem; padding: 0 0.7rem; }
+  #feed-name { font-size: 0.65rem; }
   #feed-info { display: none; }
   #feed-ctrls { display: none; }
-  #news-cat-filter { flex-wrap: nowrap; overflow-x: auto; padding: 0.3rem 0.7rem; }
+
+  /* Category chips: horizontal scroll, no wrapping */
+  #news-cat-filter { flex-wrap: nowrap; overflow-x: auto; padding: 0.25rem 0.7rem; gap: 0.3rem; }
   #news-cat-filter::-webkit-scrollbar { display: none; }
+  .cat-chip { padding: 0.06rem 0.35rem; font-size: 0.58rem; }
 
-  /* Trim article meta row */
+  /* Article cards: compact */
   .a-cc { display: none; }
-  .article { padding: 0.65rem 0.75rem; }
+  .article { padding: 0.5rem 0.75rem; }
+  .a-meta { margin-bottom: 0.12rem; font-size: 0.57rem; }
+  .a-title { font-size: 0.8rem; line-height: 1.35; margin-bottom: 0.18rem; }
+  .a-desc { -webkit-line-clamp: 1; font-size: 0.7rem; }
+  .a-actions { margin-top: 0.18rem; gap: 0.45rem; }
+  .a-action-btn { font-size: 0.57rem; }
 
-  /* Hide stats bar — not useful on small screen */
+  /* Stats bar hidden on mobile */
   #statusbar { display: none; }
+
+  /* Footer wastes space on small screens */
+  #footer { display: none; }
 
   /* Prevent iOS Safari from zooming in on input focus */
   #search, .form-input, .filter-select, .filter-input { font-size: 16px; }

@@ -265,18 +265,16 @@ function _mapItems(items, f) {
   }));
 }
 async function fetchOne(f) {
-  for (const proxy of PROXY_LIST) {
+  const tryProxy = proxy => {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 6000);
-    try {
-      const r = await fetch(proxy.build(f.url), { signal: ctrl.signal });
-      clearTimeout(timer);
-      if (!r.ok) continue;
-      const items = await proxy.parse(r);
-      return _mapItems(items, f);
-    } catch { clearTimeout(timer); continue; }
-  }
-  return null; // all proxies failed
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    return fetch(proxy.build(f.url), { signal: ctrl.signal })
+      .then(r => { clearTimeout(timer); if (!r.ok) throw new Error('not ok'); return proxy.parse(r); })
+      .then(items => _mapItems(items, f))
+      .catch(e => { clearTimeout(timer); throw e; });
+  };
+  // Race all proxies simultaneously — first winner is used, rest are cancelled via GC
+  return Promise.any(PROXY_LIST.map(tryProxy)).catch(() => null);
 }
 // Priority feeds loaded first for fast initial render
 const PRIORITY = new Set(['bbc','guardian','nyt','ap','aljazeera','dw','ft','nhk']);
@@ -385,9 +383,25 @@ function visible() {
   return a;
 }
 // ─── FEED ORDERING ────────────────────────────────────────────────────────────
+// Tier 1 — global wire services and newspapers of record (hard news priority)
+// Tier 2 — strong national papers and public broadcasters
+// Default  1.0 — general quality sources
+// < 1.0   — niche, curated, literary, or community aggregators
+const SOURCE_WEIGHT = {
+  reuters: 3.0, ap: 3.0, bbc: 2.8, nyt: 2.8, guardian: 2.5, economist: 2.5,
+  aljazeera: 2.5, ft: 2.5, dw: 2.2, nhk: 2.2, npr: 2.2, rfi: 2.0,
+  lemonde: 2.0, france24fr: 2.0, spiegel: 2.0, zeit: 1.8, nzz: 1.8,
+  letemps: 1.8, scmp: 1.8, straits: 1.8, nikkei: 1.8, haaretz: 1.8,
+  euronews: 1.6, dailymav: 1.6, folha: 1.5, lanacion: 1.5,
+  // niche / curated / literary — visible via their own category, not in "all" lead
+  aldaily: 0.4, laphams: 0.4, 'paris-rev': 0.45, aeon: 0.5, berfrois: 0.45,
+  lithub: 0.5, eurozine: 0.5, 'public-dom': 0.45, 'jstor-daily': 0.5, '3qd': 0.5,
+  hn: 0.6, schneier: 0.7,
+};
 function decayScore(article) {
   const hoursOld = (Date.now() - article.date) / 3_600_000;
-  return 1 / Math.pow(hoursOld + 2, 1.4);
+  const w = SOURCE_WEIGHT[article.feedId] ?? 1.0;
+  return w / Math.pow(hoursOld + 2, 1.4);
 }
 function interleave(articles) {
   const bySource = {};
@@ -824,7 +838,7 @@ async function tryStaticFeeds() {
     if (!r.ok) return false;
     const d = await r.json();
     const age = Date.now() - new Date(d.updated).getTime();
-    if (age > 5400000 || !Object.keys(d.feeds).length) return false; // >90 min ⇒ stale
+    if (age > 14400000 || !Object.keys(d.feeds).length) return false; // >4 h ⇒ stale
     const fresh = [];
     for (const [feedId, items] of Object.entries(d.feeds)) {
       const feed = FEEDS.find(f => f.id === feedId);
