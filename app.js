@@ -309,8 +309,10 @@ async function fetchBatch(feeds, trackProgress = false) {
   IDB.putAll(newArticles).catch(() => {});
   S.updatedAt = Date.now();
   document.getElementById('c-all').textContent = S.articles.length;
-  updateStats(); render(); updateFeedInfo(); loadEnd();
+  updateStats(); updateFeedInfo(); loadEnd();
+  if (newArticles.length) maybeRender(); else hideNewPillIfIdle();
 }
+function hideNewPillIfIdle() { if (!_pendingRender) render(); }
 async function loadCategory(cat, silent = false) {
   if (S.fetchedCats.has(cat) && cat !== 'all') return;
   S.fetchedCats.add(cat);
@@ -319,7 +321,7 @@ async function loadCategory(cat, silent = false) {
     loadProgress.done = 0;
     loadProgress.total = feeds.length;
     document.getElementById('articles').innerHTML =
-      `<div class="state-row"><div class="spinner"></div> fetching feeds… 0 / ${feeds.length}</div>`;
+      skeletonHTML(7, `fetching feeds… 0 / ${feeds.length}`);
   }
   if (cat === 'world-news') {
     // Load priority feeds first → fast first paint, then rest in background
@@ -375,12 +377,71 @@ function visible() {
   if (S.query) { const q=S.query.toLowerCase(); a = a.filter(x => x.title.toLowerCase().includes(q)||x.desc.toLowerCase().includes(q)); }
   if (S.sort === 'source') {
     a = [...a].sort((x,y) => x.name.localeCompare(y.name));
+    _clusterMap = new Map();
   } else if (S.sort === 'recent') {
     a = [...a].sort((x,y) => y.date - x.date);
+    _clusterMap = new Map();
   } else {
-    a = interleave([...a]);
+    a = clusterArticles(interleave([...a]));
   }
   return a;
+}
+// ─── TOPIC CLUSTERING ─────────────────────────────────────────────────────────
+// When several outlets cover the same story, fold them into one entry under the
+// highest-ranked source with a "+N sources" affordance, instead of repeating
+// near-identical headlines down the feed.
+let _clusterMap = new Map(); // lead article id → [member articles]
+const _STOPWORDS = new Set(('this that with from have will after over more than into amid says said ' +
+  'what when where their about were been they would could should your some also just only most very ' +
+  'much many other these those them then there here because while during before against between ' +
+  'through under among within without being still make makes take takes back year years week weeks ' +
+  'today first last news live update updates report').split(' '));
+function _titleTokens(title) {
+  return new Set(title.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/)
+    .filter(w => w.length >= 4 && !_STOPWORDS.has(w)));
+}
+function clusterArticles(list) {
+  _clusterMap = new Map();
+  const leads = [];          // { a, tokens }
+  const wordIndex = new Map(); // token → lead indices
+  const out = [];
+  for (const a of list) {
+    const tk = _titleTokens(a.title);
+    let lead = null;
+    if (tk.size >= 3) {
+      // Count token overlap against existing leads via inverted index
+      const overlap = new Map();
+      for (const w of tk) for (const i of (wordIndex.get(w) || []))
+        overlap.set(i, (overlap.get(i) || 0) + 1);
+      for (const [i, n] of overlap) {
+        const L = leads[i];
+        if (a.feedId === L.a.feedId) continue;                    // same outlet ⇒ not a dupe story
+        if (Math.abs(a.date - L.a.date) > 172800000) continue;    // > 48 h apart ⇒ different story
+        const minSize = Math.min(tk.size, L.tokens.size);
+        if (n >= 3 && n >= Math.ceil(minSize * 0.5)) { lead = L; break; }
+      }
+    }
+    if (lead) {
+      if (!_clusterMap.has(lead.a.id)) _clusterMap.set(lead.a.id, []);
+      _clusterMap.get(lead.a.id).push(a);
+    } else {
+      const i = leads.length;
+      leads.push({ a, tokens: tk });
+      for (const w of tk) {
+        if (!wordIndex.has(w)) wordIndex.set(w, []);
+        wordIndex.get(w).push(i);
+      }
+      out.push(a);
+    }
+  }
+  return out;
+}
+function toggleCluster(e, btn) {
+  e.stopPropagation();
+  const sub = btn.parentElement.nextElementSibling;
+  if (!sub || !sub.classList.contains('cluster-sub')) return;
+  const open = sub.classList.toggle('open');
+  btn.textContent = open ? '▴ hide other coverage' : btn.dataset.label;
 }
 // ─── FEED ORDERING ────────────────────────────────────────────────────────────
 // Tier 1 — global wire services and newspapers of record (hard news priority)
@@ -419,43 +480,111 @@ function interleave(articles) {
   }
   return result;
 }
+function articleHTML(a, isSub = false) {
+  const isSaved = S.saved.has(a.id);
+  const langBadge = a.lang !== 'en'
+    ? `<span class="a-lang">${a.lang}</span>` : '';
+  const xlateAction = a.lang !== 'en'
+    ? `<button class="a-action-btn" data-title="${esc(a.title)}" data-lang="${a.lang}"
+         onclick="event.stopPropagation();inlineXlate(this,this.dataset.title,this.dataset.lang)">⟳ translate</button>` : '';
+  const members = !isSub ? (_clusterMap.get(a.id) || []) : [];
+  const clusterBadge = members.length
+    ? `<span class="a-cluster-badge">▣ ${members.length + 1} sources</span>` : '';
+  const clusterBlock = members.length ? (() => {
+    const names = [...new Set(members.map(m => m.name))];
+    const label = `▾ also: ${names.slice(0, 3).join(' · ')}${names.length > 3 ? ` +${names.length - 3}` : ''}`;
+    return `
+      <div class="cluster-row">
+        <button class="a-action-btn cluster-toggle" data-label="${esc(label)}"
+          onclick="toggleCluster(event,this)">${esc(label)}</button>
+      </div>
+      <div class="cluster-sub">${members.map(m => articleHTML(m, true)).join('')}</div>`;
+  })() : '';
+  return `<div class="article${isSub?' sub':''}${S.read.has(a.id)?' read':''}${S.active===a.id?' active':''}"
+               data-id="${esc(a.id)}"
+               onclick="event.stopPropagation();openReader(this.dataset.id)">
+    <div class="a-meta">
+      <span class="a-cc">${esc(a.cc||'--')}</span>
+      <span class="a-src">${esc(a.name)}</span>
+      ${langBadge}
+      ${clusterBadge}
+      <span class="a-dot">·</span>
+      <span class="a-time" data-ts="${a.date}" title="${formatAbsolute(new Date(a.date))}"
+            onclick="event.stopPropagation();flashTimestamp(this)">${relativeTime(new Date(a.date))}</span>
+      <span class="a-dot">·</span>
+      <span class="a-read-time">${a.readMin||1}m</span>
+    </div>
+    <div class="a-title">${esc(a.title)}</div>
+    ${isSub ? '' : `<div class="a-desc">${esc(a.desc)}</div>`}
+    <div class="a-actions">
+      <button class="a-action-btn${isSaved?' saved':''}"
+        onclick="event.stopPropagation();toggleSave(this.closest('[data-id]').dataset.id)">${isSaved?'◆ saved':'◇ save'}</button>
+      <span class="a-dot">·</span>
+      <a class="a-open-link" href="${esc(a.link)}" target="_blank" rel="noopener"
+        onclick="event.stopPropagation()">↗ open</a>
+      ${xlateAction ? `<span class="a-dot">·</span>${xlateAction}` : ''}
+    </div>
+    ${clusterBlock}
+  </div>`;
+}
+// Incremental rendering: build the first chunk synchronously, append the rest
+// as the user scrolls — keeps the DOM small with 800+ articles loaded.
+const RENDER_CHUNK = 60;
+let _renderList = [], _renderedCount = 0;
+function _appendChunk() {
+  const wrap = document.getElementById('articles');
+  const slice = _renderList.slice(_renderedCount, _renderedCount + RENDER_CHUNK);
+  if (!slice.length) return;
+  _renderedCount += slice.length;
+  wrap.insertAdjacentHTML('beforeend', slice.map(a => articleHTML(a)).join(''));
+}
 function render() {
   const list = visible();
   const wrap = document.getElementById('articles');
   wrap.className = S.compact ? 'compact' : '';
-  if (!list.length) { wrap.innerHTML = '<div id="empty">no articles</div>'; return; }
-  wrap.innerHTML = list.map(a => {
-    const isSaved = S.saved.has(a.id);
-    const langBadge = a.lang !== 'en'
-      ? `<span class="a-lang">${a.lang}</span>` : '';
-    const xlateAction = a.lang !== 'en'
-      ? `<button class="a-action-btn" data-title="${esc(a.title)}" data-lang="${a.lang}"
-           onclick="event.stopPropagation();inlineXlate(this,this.dataset.title,this.dataset.lang)">⟳ translate</button>` : '';
-    return `<div class="article${S.read.has(a.id)?' read':''}${S.active===a.id?' active':''}"
-                 data-id="${esc(a.id)}"
-                 onclick="openReader(this.dataset.id)">
-      <div class="a-meta">
-        <span class="a-cc">${esc(a.cc||'--')}</span>
-        <span class="a-src">${esc(a.name)}</span>
-        ${langBadge}
-        <span class="a-dot">·</span>
-        <span class="a-time" data-ts="${a.date}" title="${formatAbsolute(new Date(a.date))}"
-              onclick="event.stopPropagation();flashTimestamp(this)">${relativeTime(new Date(a.date))}</span>
-        <span class="a-dot">·</span>
-        <span class="a-read-time">${a.readMin||1}m</span>
-      </div>
-      <div class="a-title">${esc(a.title)}</div>
-      <div class="a-desc">${esc(a.desc)}</div>
-      <div class="a-actions">
-        <button class="a-action-btn${isSaved?' saved':''}"
-          onclick="event.stopPropagation();toggleSave(this.closest('[data-id]').dataset.id)">${isSaved?'◆ saved':'◇ save'}</button>
-        <span class="a-dot">·</span>
-        <a class="a-open-link" href="${esc(a.link)}" target="_blank" rel="noopener"
-          onclick="event.stopPropagation()">↗ open</a>
-        ${xlateAction ? `<span class="a-dot">·</span>${xlateAction}` : ''}
-      </div>
-    </div>`;
-  }).join('');
+  hideNewPill();
+  if (!list.length) { wrap.innerHTML = '<div id="empty">no articles</div>'; _renderList = []; return; }
+  _renderList = list;
+  _renderedCount = 0;
+  wrap.innerHTML = '';
+  _appendChunk();
+}
+document.getElementById('articles').addEventListener('scroll', function () {
+  if (_renderedCount < _renderList.length &&
+      this.scrollTop + this.clientHeight > this.scrollHeight - 600) {
+    _appendChunk();
+  }
+});
+// ─── NEW-ARTICLES PILL ────────────────────────────────────────────────────────
+// Background refresh shouldn't reorder the list under the reader's thumb.
+// If they've scrolled, hold the re-render and offer a tap-to-refresh pill.
+let _pendingRender = false;
+function maybeRender() {
+  const wrap = document.getElementById('articles');
+  if (!M.currentSection && wrap && wrap.scrollTop > 300 && _renderList.length) {
+    _pendingRender = true;
+    const pill = document.getElementById('new-pill');
+    if (pill) pill.classList.add('show');
+  } else {
+    render();
+  }
+}
+function hideNewPill() {
+  _pendingRender = false;
+  document.getElementById('new-pill')?.classList.remove('show');
+}
+function applyPendingRender() {
+  render();
+  document.getElementById('articles').scrollTop = 0;
+}
+// ─── SKELETON LOADING ─────────────────────────────────────────────────────────
+function skeletonHTML(n = 7, progressText = 'fetching feeds…') {
+  return `<div class="state-row"><div class="spinner"></div> ${progressText}</div>` +
+    Array.from({ length: n }, () => `<div class="sk-card">
+      <div class="sk-line" style="width:34%"></div>
+      <div class="sk-line bright" style="width:88%"></div>
+      <div class="sk-line" style="width:64%"></div>
+    </div>`).join('');
 }
 // ─── CONTROLS ────────────────────────────────────────────────────────────────
 function doSelect(id) {
@@ -828,6 +957,8 @@ async function paintFromCache() {
 //    (no Date.now() buster) means repeat visits revalidate cheaply (304) instead
 //    of re-downloading the whole payload every time.
 let _staticLoaded = false;
+// Static file is the primary data source. Returns 'fresh' | 'stale' | false.
+// Stale data still paints (better than blank) — proxies then top it up.
 async function tryStaticFeeds() {
   loadStart();
   try {
@@ -838,7 +969,8 @@ async function tryStaticFeeds() {
     if (!r.ok) return false;
     const d = await r.json();
     const age = Date.now() - new Date(d.updated).getTime();
-    if (age > 14400000 || !Object.keys(d.feeds).length) return false; // >4 h ⇒ stale
+    if (!Object.keys(d.feeds).length) return false;
+    const isFresh = age < 7200000; // < 2 h with a 15-min cron ⇒ comfortably fresh
     const fresh = [];
     for (const [feedId, items] of Object.entries(d.feeds)) {
       const feed = FEEDS.find(f => f.id === feedId);
@@ -864,7 +996,7 @@ async function tryStaticFeeds() {
     document.getElementById('c-all').textContent = S.articles.length;
     updateStats(); render(); updateFeedInfo();
     IDB.putAll(fresh).catch(() => {});
-    return true;
+    return isFresh ? 'fresh' : 'stale';
   } catch { return false; }
   finally { loadEnd(); }
 }
@@ -875,14 +1007,28 @@ function backgroundFillMissing() {
   if (missing.length) fetchBatch(missing); // silent; merges + dedups
 }
 // 4. No usable static data at all → full proxy cascade (priority first).
-function fullProxyFallback() {
-  if (S.fetchedCats.has('world-news')) return;
+//    force=true tops up stale static data quietly without wiping the paint.
+function fullProxyFallback(force = false) {
+  if (!force && S.fetchedCats.has('world-news')) return;
+  if (force) {
+    const priority = FEEDS.filter(f => PRIORITY.has(f.id));
+    const rest = FEEDS.filter(f => !PRIORITY.has(f.id));
+    fetchBatch(priority).then(() => fetchBatch(rest));
+    return;
+  }
   loadCategory('world-news').then(() => {
     ['tech','science','humanities','economics','investment'].forEach(c => loadCategory(c, true));
   });
 }
-paintFromCache();
-tryStaticFeeds().then(ok => { if (ok) backgroundFillMissing(); else fullProxyFallback(); });
+function startup() {
+  paintFromCache();
+  tryStaticFeeds().then(state => {
+    if (state === 'fresh') backgroundFillMissing();
+    else if (state === 'stale') fullProxyFallback(true);
+    else fullProxyFallback();
+  });
+}
+startup();
 
 // ─── NEWS CATEGORY FILTER ─────────────────────────────────────────────────────
 function setNewsCat(nc) {
@@ -935,6 +1081,28 @@ function toggleAddForm(id) {
 
 // ─── PRICE FETCHING ───────────────────────────────────────────────────────────
 const priceCache = {};
+
+// Seed price cache from the GitHub-Actions snapshot (data/prices.json) so the
+// portfolio/watchlist/screener paint instantly without any CORS proxy round-trip.
+// Tickers not in the snapshot still fall back to live fetch below.
+let _staticPricesLoaded = 0;
+async function loadStaticPrices() {
+  if (Date.now() - _staticPricesLoaded < 300000) return; // re-check every 5 min
+  try {
+    const r = await fetch('./data/prices.json', { cache: 'no-cache' });
+    if (!r.ok) return;
+    const d = await r.json();
+    const age = Date.now() - new Date(d.updated).getTime();
+    if (age > 3600000) return; // > 1 h ⇒ too stale to trust over live fetch
+    _staticPricesLoaded = Date.now();
+    for (const [t, q] of Object.entries(d.quotes || {})) {
+      const key = t.toUpperCase();
+      // Don't overwrite a fresher live fetch
+      if (priceCache[key] && Date.now() - priceCache[key].ts < age) continue;
+      priceCache[key] = { ts: Date.now() - age, data: q };
+    }
+  } catch {}
+}
 
 // Yahoo Finance blocks direct browser CORS — try direct first, then fall back to
 // two public CORS proxies so prices load in all environments.
@@ -1034,6 +1202,7 @@ async function renderPortfolio() {
   }
   const tickers = [...new Set(M.portfolio.map(h => h.ticker))];
   if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:1.5rem;text-align:center;color:var(--text-dim)">loading prices…</td></tr>`;
+  await loadStaticPrices();
   const priceMap = {};
   await Promise.all(tickers.map(async t => { priceMap[t] = await fetchPrice(t); }));
   M.prices = priceMap;
@@ -1217,6 +1386,7 @@ async function renderWatchlist() {
      <td class="col-num" colspan="5"><span class="p-flat">loading…</span></td><td></td></tr>`
   ).join('');
   document.getElementById('wl-info').textContent = `${M.watchlist.length} tickers`;
+  await loadStaticPrices();
   await Promise.all(M.watchlist.map(async t => {
     const p = await fetchPrice(t);
     _updateWLRow(t, p);
@@ -1318,9 +1488,12 @@ async function runScreener() {
   const tbody  = document.getElementById('scr-tbody');
   status.textContent = `fetching ${tickers.length} tickers…`;
   tbody.innerHTML = `<tr><td colspan="7" style="padding:1.5rem;text-align:center;color:var(--text-dim)">loading…</td></tr>`;
+  await loadStaticPrices();
   const results = await Promise.all(tickers.map(async t => {
+    // Static snapshot covers price/change/name; fundamentals fill marketCap/PE
+    const base = priceCache[t.toUpperCase()]?.data;
     const d = await fetchFundamentals(t);
-    return { ticker: t, ...(d || {}) };
+    return { ticker: t, ...(base || {}), ...(d || {}) };
   }));
   const filtered = results.filter(r => {
     if (capFilter === 'large' && (r.marketCap == null || r.marketCap < 10e9))  return false;
@@ -1445,8 +1618,82 @@ document.getElementById('wl-ticker-in').addEventListener('keydown', e => {
   rdrEl.addEventListener('touchstart', onStart, { passive: true });
   rdrEl.addEventListener('touchend', e => { if (isSwipe(e) < 0) closeReader(); }, { passive: true });
 })();
+// ─── PULL TO REFRESH ─────────────────────────────────────────────────────────
+(function () {
+  const el = document.getElementById('articles');
+  let startY = 0, armed = false, past = false;
+  const ind = document.createElement('div');
+  ind.id = 'ptr-indicator';
+  ind.textContent = '↻ release to refresh';
+  el.addEventListener('touchstart', e => {
+    armed = el.scrollTop === 0;
+    past = false;
+    if (armed) startY = e.touches[0].clientY;
+  }, { passive: true });
+  el.addEventListener('touchmove', e => {
+    if (!armed) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 70 && !past) { past = true; el.prepend(ind); }
+    else if (dy <= 70 && past) { past = false; ind.remove(); }
+  }, { passive: true });
+  el.addEventListener('touchend', () => {
+    if (past) { ind.remove(); doRefresh(); }
+    armed = past = false;
+  }, { passive: true });
+})();
+// ─── DATA EXPORT / IMPORT ────────────────────────────────────────────────────
+// Read state, saved articles, portfolio, watchlist, and alerts all live in
+// localStorage — these let you move them between devices.
+const _SYNC_KEYS = ['px_saved','px_read','px_portfolio','px_watchlist','px_alerts',
+                    'px_port_history','px_theme','huozi-unread','huozi-compact'];
+function exportData() {
+  const out = { _app: 'huozi', _exported: new Date().toISOString() };
+  for (const k of _SYNC_KEYS) {
+    const v = localStorage.getItem(k);
+    if (v != null) out[k] = v;
+  }
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `huozi-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = JSON.parse(reader.result);
+      if (d._app !== 'huozi') { alert('Not a huozi backup file.'); return; }
+      // Sets and ticker lists merge (union); object stores are overwritten.
+      const union = (key) => {
+        if (d[key] == null) return;
+        const cur = new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+        JSON.parse(d[key]).forEach(x => cur.add(x));
+        localStorage.setItem(key, JSON.stringify([...cur]));
+      };
+      union('px_saved'); union('px_read'); union('px_watchlist');
+      // Portfolio: merge by holding id so re-importing isn't destructive
+      if (d.px_portfolio != null) {
+        const cur = JSON.parse(localStorage.getItem('px_portfolio') || '[]');
+        const ids = new Set(cur.map(h => h.id));
+        JSON.parse(d.px_portfolio).forEach(h => { if (!ids.has(h.id)) cur.push(h); });
+        localStorage.setItem('px_portfolio', JSON.stringify(cur));
+      }
+      ['px_alerts','px_port_history','px_theme','huozi-unread','huozi-compact'].forEach(k => {
+        if (d[k] != null) localStorage.setItem(k, d[k]);
+      });
+      location.reload();
+    } catch { alert('Could not read backup file.'); }
+  };
+  reader.readAsText(file);
+}
+document.getElementById('import-file')?.addEventListener('change', function () {
+  if (this.files[0]) importData(this.files[0]);
+  this.value = '';
+});
 // ─── SERVICE WORKER ──────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
-// (startup cache paint handled by paintFromCache() above)
+// (startup cache paint handled by startup() above)
