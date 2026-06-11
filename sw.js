@@ -1,4 +1,4 @@
-const CACHE = 'huozi-v3';
+const CACHE = 'huozi-v4';
 const SHELL = ['./', './index.html', './style.css', './app.js', './feeds.js', './favicon.svg', './manifest.json'];
 
 self.addEventListener('install', e => {
@@ -19,7 +19,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   // Don't cache cross-origin requests (RSS proxies, Yahoo Finance, etc.)
   if (url.origin !== self.location.origin) return;
-  // Always fetch feed data fresh — updated by GitHub Actions every 30 min
+  // Always fetch data files fresh — updated by GitHub Actions every 15 min
   if (url.pathname.includes('/data/')) return;
   e.respondWith(
     caches.match(e.request).then(cached => {

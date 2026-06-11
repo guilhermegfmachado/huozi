@@ -42,6 +42,8 @@
     <button class="t-btn" id="btn-mark-read" onclick="markAllRead()" title="mark visible articles as read">mark read</button>
     <button class="t-btn" id="btn-compact" onclick="toggleCompact()" aria-pressed="false">compact</button>
     <button class="t-btn" id="btn-theme" onclick="toggleTheme()" aria-label="Toggle light/dark theme">◑</button>
+    <button class="t-btn" id="btn-export" onclick="exportData()" title="Export saved articles, portfolio, watchlist to JSON">⬇ export</button>
+    <label class="t-btn" title="Import backup JSON" style="cursor:pointer">⬆ import<input type="file" id="import-file" accept=".json" style="display:none"></label>
   </div>
 </div>
 <div id="sidebar-overlay" onclick="toggleMobileSidebar()" role="button" aria-label="Close navigation" tabindex="-1"></div>
@@ -103,6 +105,7 @@
       <button class="cat-chip"    data-nc="science"    onclick="setNewsCat('science')">science</button>
       <button class="cat-chip"    data-nc="culture"    onclick="setNewsCat('culture')">culture</button>
     </div>
+    <button id="new-pill" onclick="applyPendingRender()" aria-live="polite">↑ new articles</button>
     <div id="articles">
       <div class="state-row"><div class="spinner"></div> fetching feeds…</div>
     </div>
