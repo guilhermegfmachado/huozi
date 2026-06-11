@@ -1,5 +1,6 @@
-const CACHE = 'huozi-v4';
-const SHELL = ['./', './index.html', './style.css', './app.js', './feeds.js', './favicon.svg', './manifest.json'];
+const CACHE = 'huozi-v5';
+const SHELL = ['./', './index.html', './style.css', './app.js', './feeds.js', './favicon.svg', './manifest.json',
+               './js/utils.js', './js/db.js', './js/markets.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
