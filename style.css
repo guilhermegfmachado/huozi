@@ -931,13 +931,15 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 @keyframes sk-pulse { 0%,100%{opacity:.4} 50%{opacity:.9} }
 /* ── NEW-ARTICLES PILL ───────────────────────────────── */
 #new-pill {
-  display: none; position: sticky; top: 0.5rem;
-  margin: 0 auto; z-index: 10;
+  display: none;
+  align-self: center;
+  z-index: 10;
   background: var(--accent); color: var(--bg);
   font-family: var(--mono); font-size: 0.65rem;
   padding: 0.28rem 0.85rem; cursor: pointer;
   border: none; letter-spacing: 0.04em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  margin: 0.35rem 0 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 #new-pill.show { display: block; }
 /* ── PULL-TO-REFRESH INDICATOR ───────────────────────── */
