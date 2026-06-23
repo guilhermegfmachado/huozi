@@ -21,7 +21,9 @@
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <!-- Load fonts async so they never block first paint -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Sans:ital,wght@0,300;0,400;1,300&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Sans:ital,wght@0,300;0,400;1,300&display=swap"></noscript>
   <link rel="stylesheet" href="style.css">
   <!-- Apply theme before first paint to prevent flash -->
   <script>(function(){var t=localStorage.getItem('px_theme')||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);}());</script>
@@ -37,13 +39,10 @@
   <div id="topbar-right">
     <div id="pulse" aria-hidden="true"></div>
     <div id="updated" aria-live="polite">—</div>
-    <button class="t-btn" id="btn-refresh" onclick="doRefresh()" aria-label="Refresh feeds">↺ refresh</button>
+    <button class="t-btn" id="btn-refresh" onclick="doRefresh()" aria-label="Refresh feeds">↺</button>
     <button class="t-btn" id="btn-unread" onclick="toggleUnread()" aria-pressed="false">unread</button>
-    <button class="t-btn" id="btn-mark-read" onclick="markAllRead()" title="mark visible articles as read">mark read</button>
-    <button class="t-btn" id="btn-compact" onclick="toggleCompact()" aria-pressed="false">compact</button>
     <button class="t-btn" id="btn-theme" onclick="toggleTheme()" aria-label="Toggle light/dark theme">◑</button>
-    <button class="t-btn" id="btn-export" onclick="exportData()" title="Export saved articles, portfolio, watchlist to JSON">⬇ export</button>
-    <label class="t-btn" title="Import backup JSON" style="cursor:pointer">⬆ import<input type="file" id="import-file" accept=".json" style="display:none"></label>
+    <input type="file" id="import-file" accept=".json" style="display:none">
   </div>
 </div>
 <div id="sidebar-overlay" onclick="toggleMobileSidebar()" role="button" aria-label="Close navigation" tabindex="-1"></div>
@@ -85,6 +84,28 @@
       <div id="sb-regions"></div>
     </div>
     <div id="sb-directory-content" style="display:none"></div>
+    <div class="sb-section sb-bottom-actions">
+      <button class="sb-item" id="sb-btn-unread" onclick="toggleUnread()">
+        <span class="sb-flag" style="font-size:0.7rem;opacity:0.6">◉</span>
+        <span class="sb-name">unread only</span>
+      </button>
+      <button class="sb-item" onclick="markAllRead()">
+        <span class="sb-flag" style="font-size:0.7rem;opacity:0.6">✓</span>
+        <span class="sb-name">mark all read</span>
+      </button>
+      <button class="sb-item" id="sb-btn-compact" onclick="toggleCompact()">
+        <span class="sb-flag" style="font-size:0.7rem;opacity:0.6">⊟</span>
+        <span class="sb-name">compact view</span>
+      </button>
+      <button class="sb-item" onclick="exportData()">
+        <span class="sb-flag" style="font-size:0.7rem;opacity:0.6">⬇</span>
+        <span class="sb-name">export data</span>
+      </button>
+      <label class="sb-item" style="cursor:pointer" onclick="document.getElementById('import-file').click();event.preventDefault()">
+        <span class="sb-flag" style="font-size:0.7rem;opacity:0.6">⬆</span>
+        <span class="sb-name">import data</span>
+      </label>
+    </div>
   </div>
   <div id="main">
     <div id="feed-bar">
