@@ -152,6 +152,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   overflow-x: hidden;
 }
 .sb-section { border-bottom: 1px solid var(--border-soft); }
+/* Bottom sidebar actions — always visible */
+.sb-bottom-actions { display: block; border-top: 1px solid var(--border-soft); margin-top: auto; }
 /* category headers in sidebar */
 .sb-cat-header {
   display: flex;
@@ -272,26 +274,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   gap: 0.35rem;
   margin-bottom: 0.3rem;
 }
-.a-cc {
-  font-size: 0.57rem;
-  color: var(--text-dim);
-  opacity: 0.45;
-  letter-spacing: 0.04em;
-  font-family: var(--mono);
-  flex-shrink: 0;
-  min-width: 1.6rem;
-}
 .a-src { color: var(--accent); letter-spacing: 0.02em; }
-.a-dot { color: var(--border); }
 .a-lang {
-  font-size: 0.55rem;
-  border: 1px solid var(--border-soft);
-  padding: 0.02rem 0.25rem;
+  font-size: 0.54rem;
   color: var(--text-dim);
-  opacity: 0.6;
+  opacity: 0.5;
 }
 .a-time { margin-left: auto; font-size: 0.57rem; cursor: default; }
-.a-read-time { font-size: 0.57rem; color: var(--text-dim); opacity: 0.45; }
 
 .a-title {
   font-family: var(--sans);
@@ -527,10 +516,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   #pulse { display: none; }
   #updated { display: none; }
   #btn-unread { display: none; }
-  #btn-mark-read { display: none; }
-  #btn-compact { display: none; }
-  #btn-export { display: none; }
-  label[for="import-file"], label:has(#import-file) { display: none; }
   #search-wrap { max-width: 160px; }
 
   /* Feed bar: slim — only shows source name on mobile */
@@ -545,7 +530,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .cat-chip { padding: 0.06rem 0.35rem; font-size: 0.58rem; }
 
   /* Article cards: compact */
-  .a-cc { display: none; }
   .article { padding: 0.5rem 0.75rem; }
   .a-meta { margin-bottom: 0.12rem; font-size: 0.57rem; }
   .a-title { font-size: 0.8rem; line-height: 1.35; margin-bottom: 0.18rem; }
@@ -971,6 +955,3 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .article.sub .a-actions { display: none; }
 /* ── EXPORT / IMPORT ─────────────────────────────────── */
 #btn-export { letter-spacing: 0.02em; }
-@media (max-width: 640px) {
-  #btn-export { display: none; }
-}

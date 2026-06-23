@@ -68,36 +68,7 @@ const S = {
 };
 const saveSaved = () => localStorage.setItem('px_saved', JSON.stringify([...S.saved]));
 const saveRead  = () => localStorage.setItem('px_read',  JSON.stringify([...S.read]));
-// ─── UTILITY ─────────────────────────────────────────────────────────────────
-const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-// ─── DATE HELPERS ─────────────────────────────────────────────────────────────
-function parseDate(str) {
-  if (!str) return null;
-  const d = new Date(str);
-  return isNaN(d.getTime()) ? null : d;
-}
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-function relativeTime(date) {
-  const ms = Date.now() - date.getTime();
-  const min = ms / 60000;
-  const hr  = ms / 3600000;
-  if (min < 60) return Math.max(1, Math.floor(min)) + 'm ago';
-  if (hr  < 24) return Math.floor(hr) + 'h ago';
-  const d0 = new Date(); d0.setHours(0,0,0,0);
-  const d1 = new Date(date); d1.setHours(0,0,0,0);
-  const dayDiff = Math.round((d0 - d1) / 86400000);
-  if (dayDiff === 1) return 'yesterday';
-  if (dayDiff <= 6) return dayDiff + 'd ago';
-  const curYear = new Date().getFullYear();
-  const label = date.getDate() + ' ' + MONTHS[date.getMonth()];
-  return date.getFullYear() === curYear ? label : label + ' ' + date.getFullYear();
-}
-function formatAbsolute(date) {
-  return date.toLocaleString(undefined, {
-    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-  });
-}
+// ─── UTILITY / DATE / FORMAT HELPERS → js/utils.js ──────────────────────────
 // ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 function buildSidebar() {
   const cats = [
@@ -251,7 +222,6 @@ function updateFeedInfo() {
   }
 }
 // ─── FETCH ───────────────────────────────────────────────────────────────────
-const stripHtml = s => { const d = document.createElement('div'); d.innerHTML = s; return (d.textContent||'').replace(/\s+/g,' ').trim(); };
 function _mapItems(items, f) {
   return items.map(i => ({
     id:      i.guid || i.link || Math.random().toString(36),
@@ -267,7 +237,7 @@ function _mapItems(items, f) {
 async function fetchOne(f) {
   const tryProxy = proxy => {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const timer = setTimeout(() => ctrl.abort(), 4000);
     return fetch(proxy.build(f.url), { signal: ctrl.signal })
       .then(r => { clearTimeout(timer); if (!r.ok) throw new Error('not ok'); return proxy.parse(r); })
       .then(items => _mapItems(items, f))
@@ -504,15 +474,11 @@ function articleHTML(a, isSub = false) {
                data-id="${esc(a.id)}"
                onclick="event.stopPropagation();openReader(this.dataset.id)">
     <div class="a-meta">
-      <span class="a-cc">${esc(a.cc||'--')}</span>
       <span class="a-src">${esc(a.name)}</span>
       ${langBadge}
       ${clusterBadge}
-      <span class="a-dot">·</span>
       <span class="a-time" data-ts="${a.date}" title="${formatAbsolute(new Date(a.date))}"
             onclick="event.stopPropagation();flashTimestamp(this)">${relativeTime(new Date(a.date))}</span>
-      <span class="a-dot">·</span>
-      <span class="a-read-time">${a.readMin||1}m</span>
     </div>
     <div class="a-title">${esc(a.title)}</div>
     ${isSub ? '' : `<div class="a-desc">${esc(a.desc)}</div>`}
@@ -635,8 +601,17 @@ function markAllRead() {
   visible().forEach(a => S.read.add(a.id));
   saveRead(); updateStats(); render();
 }
-function toggleUnread()  { S.unread=!S.unread;  localStorage.setItem('huozi-unread',S.unread);  const u=document.getElementById('btn-unread');  u.classList.toggle('on',S.unread);  u.setAttribute('aria-pressed',S.unread);  render(); }
-function toggleCompact() { S.compact=!S.compact; localStorage.setItem('huozi-compact',S.compact); const c=document.getElementById('btn-compact'); c.classList.toggle('on',S.compact); c.setAttribute('aria-pressed',S.compact); render(); }
+function toggleUnread()  {
+  S.unread=!S.unread;  localStorage.setItem('huozi-unread',S.unread);
+  document.getElementById('btn-unread')?.classList.toggle('on',S.unread);
+  document.getElementById('sb-btn-unread')?.classList.toggle('on',S.unread);
+  render();
+}
+function toggleCompact() {
+  S.compact=!S.compact; localStorage.setItem('huozi-compact',S.compact);
+  document.getElementById('sb-btn-compact')?.classList.toggle('on',S.compact);
+  render();
+}
 function doRefresh() { refresh(); }
 function updateStats() {
   ['st-a','st-s','st-l'].forEach(id => document.getElementById(id).classList.remove('stat-loading'));
@@ -869,10 +844,9 @@ function flashTimestamp(el) {
 initTheme();
 buildSidebar();
 document.getElementById('feed-name').textContent = '';
-const _btnU = document.getElementById('btn-unread');
-_btnU.classList.toggle('on', S.unread); _btnU.setAttribute('aria-pressed', S.unread);
-const _btnC = document.getElementById('btn-compact');
-_btnC.classList.toggle('on', S.compact); _btnC.setAttribute('aria-pressed', S.compact);
+document.getElementById('btn-unread')?.classList.toggle('on', S.unread);
+document.getElementById('sb-btn-unread')?.classList.toggle('on', S.unread);
+document.getElementById('sb-btn-compact')?.classList.toggle('on', S.compact);
 
 // ─── STARTUP: cache paint → static file → fill gaps → proxy fallback ─────────
 // 1. Instant paint from IndexedDB cache (no network) so the page is never blank.
