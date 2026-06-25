@@ -15,8 +15,8 @@
   --red:         #f05050;
   --sidebar:     240px;
   --topbar:      40px;
-  --mono:        'IBM Plex Mono', monospace;
-  --sans:        'IBM Plex Sans', sans-serif;
+  --mono:        'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --sans:        'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 [data-theme="light"] {
   --bg:          #f7f5f0;
@@ -953,5 +953,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .article.sub .a-title { font-size: 0.78rem; color: var(--text); }
 .article.sub .a-actions { display: none; }
-/* ── EXPORT / IMPORT ─────────────────────────────────── */
-#btn-export { letter-spacing: 0.02em; }
+/* ── FEED-INFO FAILED INDICATOR ──────────────────────── */
+.feed-failed { color: var(--red); opacity: 0.7; }
+/* ── PORTFOLIO SNAPSHOT INDICATOR ────────────────────── */
+.price-snapshot { color: var(--text-dim); font-size: 0.6em; vertical-align: super; margin-left: 1px; cursor: help; }
+/* ── SIDEBAR BOTTOM ACTIONS — compact ────────────────── */
+.sb-bottom-actions .sb-item {
+  padding: 0.3rem 0.85rem;
+  font-size: 0.62rem;
+}
+.sb-bottom-actions .sb-name { font-size: 0.62rem; }
