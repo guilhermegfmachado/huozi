@@ -217,9 +217,10 @@ function refreshPulse() {
 function updateFeedInfo() {
   if (M.currentSection) return;
   const el = document.getElementById('feed-info');
-  if (el && S.feed === 'all') {
-    el.textContent = `${S.articles.length} articles · ${new Set(S.articles.map(a => a.feedId)).size} sources`;
-  }
+  if (!el || S.feed !== 'all') return;
+  const failed = Object.values(S.counts).filter(v => v === -1).length;
+  const failedNote = failed ? ` · <span class="feed-failed">${failed} failed</span>` : '';
+  el.innerHTML = `${S.articles.length} articles · ${new Set(S.articles.map(a => a.feedId)).size} sources${failedNote}`;
 }
 // ─── FETCH ───────────────────────────────────────────────────────────────────
 function _mapItems(items, f) {
@@ -906,11 +907,13 @@ async function tryStaticFeeds() {
   } catch { return false; }
   finally { loadEnd(); }
 }
-// 3. Some sources fail server-side — fetch just those via the proxy cascade,
-//    quietly in the background, so coverage approaches 100% without blocking paint.
+// 3. Some sources fail server-side — retry only priority feeds via proxy so we
+//    don't saturate the network fetching low-value feeds in the background.
 function backgroundFillMissing() {
   const missing = FEEDS.filter(f => !S.counts[f.id] || S.counts[f.id] < 1);
-  if (missing.length) fetchBatch(missing); // silent; merges + dedups
+  if (!missing.length) return;
+  const toRetry = missing.filter(f => PRIORITY.has(f.id));
+  if (toRetry.length) fetchBatch(toRetry);
 }
 // 4. No usable static data at all → full proxy cascade (priority first).
 //    force=true tops up stale static data quietly without wiping the paint.

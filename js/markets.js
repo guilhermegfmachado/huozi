@@ -80,6 +80,9 @@ async function fetchPrice(ticker) {
   const key = ticker.toUpperCase();
   const cached = priceCache[key];
   if (cached && Date.now() - cached.ts < 300000) return cached.data;
+  // If we have a snapshot price (from GH Actions) but it's stale, still return it
+  // with a flag so the UI can show the snapshot age rather than silently showing —
+  if (cached) return { ...cached.data, _snapshot: true };
   const d = await _fetchJson(
     `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`
   ) || await _fetchJson(
@@ -157,15 +160,16 @@ function _renderPortfolioTable(priceMap) {
   if (!tbody || !M.portfolio.length) { renderPortfolio(); return; }
   let totalValue = 0, totalCost = 0;
   const rows = M.portfolio.map(h => {
-    const p     = priceMap[h.ticker];
-    const price = p?.price ?? null;
-    const value = price != null ? price * h.shares : null;
-    const cost  = h.avgCost * h.shares;
-    const gl    = value != null ? value - cost : null;
-    const glPct = value != null && cost ? ((value - cost) / cost) * 100 : null;
+    const p        = priceMap[h.ticker];
+    const price    = p?.price ?? null;
+    const snapshot = p?._snapshot ?? false;
+    const value    = price != null ? price * h.shares : null;
+    const cost     = h.avgCost * h.shares;
+    const gl       = value != null ? value - cost : null;
+    const glPct    = value != null && cost ? ((value - cost) / cost) * 100 : null;
     if (value != null) totalValue += value;
     totalCost += cost;
-    return { ...h, price, value, cost, gl, glPct };
+    return { ...h, price, snapshot, value, cost, gl, glPct };
   });
   const { col, dir } = M.portSort;
   rows.sort((a, b) => {
@@ -211,7 +215,7 @@ function _renderPortfolioTable(priceMap) {
     <td class="col-ticker">${r.ticker}</td>
     <td class="col-num">${fmt(r.shares)}</td>
     <td class="col-num">${fmt(r.avgCost)}</td>
-    <td class="col-num">${r.price != null ? fmt(r.price) : '—'}</td>
+    <td class="col-num">${r.price != null ? fmt(r.price) + (r.snapshot ? '<span class="price-snapshot" title="daily snapshot price">*</span>' : '') : '—'}</td>
     <td class="col-num">${r.value != null ? fmt(r.value) : '—'}</td>
     <td class="col-num ${gainCls(r.gl)}">${r.gl != null ? fmtSgn(r.gl) : '—'}</td>
     <td class="col-num ${gainCls(r.glPct)}">${fmtPct(r.glPct)}</td>
