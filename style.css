@@ -113,7 +113,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   padding: 0.28rem 0.6rem 0.28rem 1.6rem;
   outline: none;
   transition: border-color 0.12s;
@@ -545,6 +545,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   /* Prevent iOS Safari from zooming in on input focus */
   #search, .form-input, .filter-select, .filter-input { font-size: 16px; }
+  /* Visually shrink placeholder while keeping input font-size at 16px for iOS */
+  #search::placeholder { font-size: 13px; }
 }
 /* ── SOURCE INFO TOOLTIP ─────────────────────────────── */
 .sb-item { position: relative; }
