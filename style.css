@@ -113,7 +113,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   border: 1px solid var(--border);
   color: var(--text);
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   padding: 0.28rem 0.6rem 0.28rem 1.6rem;
   outline: none;
   transition: border-color 0.12s;
@@ -341,7 +341,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 @media (max-width: 640px) {
   /* on mobile, always show actions (no hover state) */
   .a-actions { opacity: 1; height: auto; }
-  .article { padding: 0.85rem 0.9rem; }
 }
 .state-row {
   padding: 0.75rem 1rem; font-size: 0.7rem; color: var(--text-dim);
@@ -527,24 +526,27 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   /* Category chips: horizontal scroll, no wrapping */
   #news-cat-filter { flex-wrap: nowrap; overflow-x: auto; padding: 0.25rem 0.7rem; gap: 0.3rem; }
   #news-cat-filter::-webkit-scrollbar { display: none; }
-  .cat-chip { padding: 0.06rem 0.35rem; font-size: 0.58rem; }
+  .cat-chip { padding: 0.06rem 0.35rem; font-size: 0.65rem; }
 
-  /* Article cards: compact */
-  .article { padding: 0.5rem 0.75rem; }
-  .a-meta { margin-bottom: 0.12rem; font-size: 0.57rem; }
-  .a-title { font-size: 0.8rem; line-height: 1.35; margin-bottom: 0.18rem; }
-  .a-desc { -webkit-line-clamp: 1; font-size: 0.7rem; }
+  /* Article cards: compact but readable */
+  .article { padding: 0.6rem 0.75rem; }
+  .a-meta { margin-bottom: 0.12rem; font-size: 0.65rem; }
+  .a-title { font-size: 0.85rem; line-height: 1.35; margin-bottom: 0.18rem; }
+  .a-desc { -webkit-line-clamp: 1; font-size: 0.75rem; }
   .a-actions { margin-top: 0.18rem; gap: 0.45rem; }
-  .a-action-btn { font-size: 0.57rem; }
+  .a-action-btn { font-size: 0.63rem; }
 
   /* Stats bar hidden on mobile */
   #statusbar { display: none; }
 
-  /* Footer wastes space on small screens */
-  #footer { display: none; }
+  /* Footer: compact single line on mobile */
+  #footer { padding: 0.3rem 0.75rem; font-size: 0.58rem; }
+  #footer > div:first-child { display: none; }
 
   /* Prevent iOS Safari from zooming in on input focus */
   #search, .form-input, .filter-select, .filter-input { font-size: 16px; }
+  /* Visually shrink placeholder while keeping input font-size at 16px for iOS */
+  #search::placeholder { font-size: 13px; }
 }
 /* ── SOURCE INFO TOOLTIP ─────────────────────────────── */
 .sb-item { position: relative; }
@@ -617,7 +619,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   background: var(--bg-panel); flex-shrink: 0; flex-wrap: wrap;
 }
 .cat-chip {
-  font-size: 0.6rem; font-family: var(--mono);
+  font-size: 0.65rem; font-family: var(--mono);
   border: 1px solid var(--border); color: var(--text-dim);
   padding: 0.08rem 0.4rem; cursor: pointer; background: none;
   letter-spacing: 0.03em; transition: color 0.1s, border-color 0.1s;
