@@ -1087,6 +1087,6 @@ document.getElementById('import-file')?.addEventListener('change', function () {
 });
 // ─── SERVICE WORKER ──────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
 }
 // (startup cache paint handled by startup() above)

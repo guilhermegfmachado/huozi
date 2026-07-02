@@ -50,8 +50,9 @@ async function loadStaticPrices() {
     const r = await fetch('./data/prices.json', { cache: 'no-cache' });
     if (!r.ok) return;
     const d = await r.json();
-    const age = Date.now() - new Date(d.updated).getTime();
-    if (age > 3600000) return; // > 1 h ⇒ too stale to trust over live fetch
+    const updated = new Date(d.updated).getTime();
+    // Unknown timestamp ⇒ treat as a day old: still seeded, but live fetch wins
+    const age = isNaN(updated) ? 86400000 : Math.max(0, Date.now() - updated);
     _staticPricesLoaded = Date.now();
     for (const [t, q] of Object.entries(d.quotes || {})) {
       const key = t.toUpperCase();
@@ -63,14 +64,16 @@ async function loadStaticPrices() {
 
 // Yahoo Finance blocks direct browser CORS — try direct first, then fall back to
 // two public CORS proxies so prices load in all environments.
+// Each attempt is capped at 5s so a dead endpoint can't hang the UI.
 async function _fetchJson(url) {
-  try { const r = await fetch(url); if (r.ok) return await r.json(); } catch {}
+  const get = u => fetch(u, { signal: AbortSignal.timeout(5000) });
+  try { const r = await get(url); if (r.ok) return await r.json(); } catch {}
   try {
-    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+    const r = await get(`https://corsproxy.io/?${encodeURIComponent(url)}`);
     if (r.ok) return await r.json();
   } catch {}
   try {
-    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const r = await get(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
     if (r.ok) { const d = await r.json(); return JSON.parse(d.contents); }
   } catch {}
   return null;
@@ -80,15 +83,16 @@ async function fetchPrice(ticker) {
   const key = ticker.toUpperCase();
   const cached = priceCache[key];
   if (cached && Date.now() - cached.ts < 300000) return cached.data;
-  // If we have a snapshot price (from GH Actions) but it's stale, still return it
-  // with a flag so the UI can show the snapshot age rather than silently showing —
-  if (cached) return { ...cached.data, _snapshot: true };
+  // Snapshot (GH Actions, every 15 min) under an hour old: serve it flagged,
+  // skipping the CORS-proxy round-trip entirely
+  if (cached && Date.now() - cached.ts < 3600000) return { ...cached.data, _snapshot: true };
   const d = await _fetchJson(
     `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`
   ) || await _fetchJson(
     `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(key)}?interval=1d&range=2d`
   );
-  if (!d) return null;
+  // Live fetch failed: an old snapshot beats an em-dash
+  if (!d) return cached ? { ...cached.data, _snapshot: true } : null;
   const result = d.chart?.result?.[0];
   if (!result) return null;
   const meta = result.meta;
@@ -132,7 +136,9 @@ async function fetchFundamentals(ticker) {
 }
 
 // ─── PORTFOLIO ────────────────────────────────────────────────────────────────
+let _portGen = 0; // drops stale async renders that finish after a newer one started
 async function renderPortfolio() {
+  const gen = ++_portGen;
   const tbody   = document.getElementById('port-tbody');
   const summary = document.getElementById('port-summary');
   const alloc   = document.getElementById('port-alloc');
@@ -145,10 +151,15 @@ async function renderPortfolio() {
     return;
   }
   const tickers = [...new Set(M.portfolio.map(h => h.ticker))];
-  if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:1.5rem;text-align:center;color:var(--text-dim)">loading prices…</td></tr>`;
+  // Only show the loading placeholder when no table is rendered yet —
+  // re-renders (add/delete/refresh) keep the old rows until new data lands
+  if (tbody && !tbody.querySelector('.col-ticker')) {
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:1.5rem;text-align:center;color:var(--text-dim)">loading prices…</td></tr>`;
+  }
   await loadStaticPrices();
   const priceMap = {};
   await Promise.all(tickers.map(async t => { priceMap[t] = await fetchPrice(t); }));
+  if (gen !== _portGen) return; // superseded
   M.prices = priceMap;
   _renderPortfolioTable(priceMap);
 }
@@ -322,7 +333,9 @@ function sortWL(col) {
   _renderWLTable();
 }
 
+let _wlGen = 0; // drops stale async renders that finish after a newer one started
 async function renderWatchlist() {
+  const gen = ++_wlGen;
   const tbody = document.getElementById('wl-tbody');
   if (!tbody) return;
   if (!M.watchlist.length) {
@@ -339,9 +352,11 @@ async function renderWatchlist() {
   await loadStaticPrices();
   await Promise.all(M.watchlist.map(async t => {
     const p = await fetchPrice(t);
+    if (gen !== _wlGen) return;
     _updateWLRow(t, p);
     _checkAlerts(t, p);
   }));
+  if (gen !== _wlGen) return; // superseded
   _renderWLTable();
 }
 
@@ -552,4 +567,16 @@ function renderSources() {
 // Watchlist enter key
 document.getElementById('wl-ticker-in').addEventListener('keydown', e => {
   if (e.key === 'Enter') addToWatchlist();
+});
+
+// Portfolio form: Enter submits from any field
+['pf-ticker', 'pf-shares', 'pf-cost', 'pf-date'].forEach(id => {
+  document.getElementById(id)?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') addHolding();
+  });
+});
+
+// Alert form: Enter submits
+document.getElementById('al-price')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveAlert();
 });
