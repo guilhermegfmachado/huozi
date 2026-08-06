@@ -769,6 +769,28 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .source-item-name { color: var(--text); }
 .source-item-link { font-size: 0.62rem; color: var(--text-dim); transition: color 0.1s; }
 .source-item-link:hover { color: var(--accent); }
+/* ── OBSERVATORY ─────────────────────────────────────── */
+.obs-section { margin-bottom: 1.4rem; }
+.obs-section:last-child { margin-bottom: 0; }
+.obs-cat-head {
+  font-size: 0.57rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 0.55rem; padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+.obs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.6rem; }
+.obs-card {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  padding: 0.6rem 0.7rem; display: flex; flex-direction: column;
+}
+.obs-card:hover { border-color: var(--text-dim); }
+.obs-name { font-size: 0.71rem; color: var(--text); transition: color 0.1s; }
+.obs-name:hover { color: var(--accent); }
+.obs-desc { font-size: 0.59rem; color: var(--text-dim); line-height: 1.45; margin-top: 0.25rem; }
+.obs-domain {
+  font-size: 0.55rem; color: var(--text-dim); opacity: 0.6;
+  margin-top: 0.35rem; letter-spacing: 0.03em;
+}
+#obs-filter { width: 150px; }
 /* ── SHORTCUTS OVERLAY ───────────────────────────────── */
 #shortcuts-overlay {
   display: none;
@@ -812,6 +834,11 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .sec-body { padding: 0.75rem; }
   .port-summary { grid-template-columns: repeat(2, 1fr); }
   .sources-grid { grid-template-columns: 1fr; }
+  .obs-grid { grid-template-columns: 1fr; }
+  /* .sec-bar is a fixed-height flex row with no wrap — drop the count and
+     shrink the filter so the title + input still fit on one line at 320px */
+  #obs-filter { width: 110px; }
+  #sec-observatory .sec-info { display: none; }
   .wl-add-row { flex-wrap: wrap; }
   .wl-add-row .form-input.wide { flex: 1; min-width: 120px; }
   .form-row { gap: 0.4rem; }

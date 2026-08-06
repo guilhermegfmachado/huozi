@@ -79,6 +79,10 @@
         <span class="sb-flag" style="font-size:0.8rem;opacity:0.7">◎</span>
         <span class="sb-name">sources</span>
       </div>
+      <div class="sb-item" data-id="observatory" onclick="showSection('observatory')">
+        <span class="sb-flag" style="font-size:0.8rem;opacity:0.7">◐</span>
+        <span class="sb-name">observatory</span>
+      </div>
     </div>
     <div id="sb-filter-content">
       <div id="sb-regions"></div>
@@ -334,6 +338,19 @@
       </div>
       <div class="sec-body" id="sources-body"></div>
     </div>
+
+    <!-- OBSERVATORY SECTION -->
+    <div id="sec-observatory" class="section-panel">
+      <div class="sec-bar">
+        <div class="sec-title">◐ observatory</div>
+        <div class="sec-info" id="obs-info"></div>
+        <div class="sec-ctrls">
+          <label for="obs-filter" class="sr-only">Filter data sources</label>
+          <input class="filter-input" id="obs-filter" placeholder="filter…" autocomplete="off" aria-label="Filter data sources">
+        </div>
+      </div>
+      <div class="sec-body" id="observatory-body"></div>
+    </div>
   </div>
   <div id="reader" class="hide">
     <div id="reader-top">
@@ -389,6 +406,7 @@
 <script src="js/utils.js" defer></script>
 <script src="js/db.js" defer></script>
 <script src="js/markets.js" defer></script>
+<script src="js/observatory.js" defer></script>
 <script src="app.js" defer></script>
 </body>
 </html>

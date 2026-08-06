@@ -968,6 +968,7 @@ function showSection(name) {
   else if (name === 'watchlist') renderWatchlist();
   else if (name === 'screener') renderScreener();
   else if (name === 'sources') renderSources();
+  else if (name === 'observatory') renderObservatory();
   if (name === 'portfolio' || name === 'watchlist') {
     M.refreshTimer = setInterval(() => {
       if (M.currentSection === 'portfolio') refreshPortfolioPrices();
