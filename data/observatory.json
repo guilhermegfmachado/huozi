@@ -9,5 +9,49 @@
     "Macro & Markets",
     "Digital"
   ],
-  "entries": []
+  "entries": [
+    { "name": "earth.nullschool.net", "url": "https://earth.nullschool.net", "category": "Earth Systems", "description": "Animated global wind, ocean currents and temperature on a spinnable globe." },
+    { "name": "Windy", "url": "https://www.windy.com", "category": "Earth Systems", "description": "Multiple weather models side by side with a cleaner interface." },
+    { "name": "GlobalQuake", "url": "https://globalquake.net", "category": "Earth Systems", "description": "Open seismic network aggregating public stations for near-instant quake detection." },
+    { "name": "EarthquakeTrack", "url": "https://earthquaketrack.com", "category": "Earth Systems", "description": "Earthquake feed and per-location history, largely repackaged USGS data." },
+    { "name": "BGS Geomagnetism", "url": "https://geomag.bgs.ac.uk", "category": "Earth Systems", "description": "British Geological Survey magnetometer readings and field disturbance." },
+    { "name": "NOAA SWPC", "url": "https://www.swpc.noaa.gov", "category": "Earth Systems", "description": "Solar flares, Kp index and geomagnetic storm warnings." },
+    { "name": "Tide-Forecast", "url": "https://www.tide-forecast.com", "category": "Earth Systems", "description": "Tidal predictions for coastal locations worldwide." },
+    { "name": "NASA Ocean Color", "url": "https://oceancolor.gsfc.nasa.gov", "category": "Earth Systems", "description": "Satellite chlorophyll and sea surface temperature data." },
+    { "name": "NASA Worldview", "url": "https://worldview.earthdata.nasa.gov", "category": "Earth Systems", "description": "Browser for near-real-time satellite imagery layers." },
+    { "name": "Copernicus", "url": "https://www.copernicus.eu", "category": "Earth Systems", "description": "EU earth observation programme; granular European coverage." },
+
+    { "name": "CO2.earth", "url": "https://www.co2.earth", "category": "Climate & Environment", "description": "Current atmospheric CO2 concentration from Mauna Loa." },
+    { "name": "Climate TRACE", "url": "https://climatetrace.org", "category": "Climate & Environment", "description": "Greenhouse emissions attributed to individual facilities via satellite inference." },
+    { "name": "Global Forest Watch", "url": "https://www.globalforestwatch.org", "category": "Climate & Environment", "description": "Satellite-derived deforestation alerts and forest cover change." },
+    { "name": "IQAir Earth", "url": "https://www.iqair.com/earth", "category": "Climate & Environment", "description": "Real-time PM2.5 air quality from monitors worldwide." },
+    { "name": "NETC", "url": "https://netc.com", "category": "Climate & Environment", "description": "Crowdsourced radiation readings; indicative rather than authoritative." },
+    { "name": "Global Fishing Watch", "url": "https://globalfishingwatch.org", "category": "Climate & Environment", "description": "Commercial fishing vessel activity from AIS; used for illegal-fishing detection." },
+
+    { "name": "Flightradar24", "url": "https://www.flightradar24.com", "category": "Transport", "description": "Consumer flight tracker built on ADS-B transponder data." },
+    { "name": "OpenSky Network", "url": "https://opensky-network.org", "category": "Transport", "description": "Research-oriented ADS-B network with a genuinely open API." },
+    { "name": "ADS-B Exchange", "url": "https://globe.adsbexchange.com", "category": "Transport", "description": "Unfiltered ADS-B; retains military and blocked aircraft." },
+    { "name": "MarineTraffic", "url": "https://www.marinetraffic.com", "category": "Transport", "description": "AIS ship tracking; commercial product with a limited free view." },
+    { "name": "Ship & Bunker", "url": "https://shipandbunker.com", "category": "Transport", "description": "Marine fuel prices by port; a clean read on trade cost pressure." },
+
+    { "name": "ACLED", "url": "https://acleddata.com", "category": "Conflict & Health", "description": "Academic-grade coded conflict and protest event data." },
+    { "name": "Liveuamap", "url": "https://liveuamap.com", "category": "Conflict & Health", "description": "Geolocated conflict reporting; faster than ACLED, less rigorous." },
+    { "name": "Observe.earth", "url": "https://observe.earth", "category": "Conflict & Health", "description": "Aggregator combining conflict, outbreak and fuel price layers." },
+    { "name": "Global Incident Map", "url": "https://outbreaks.globalincidentmap.com", "category": "Conflict & Health", "description": "Disease outbreak incidents mapped from news reports." },
+    { "name": "The World Now", "url": "https://the-world-now.com", "category": "Conflict & Health", "description": "Globe visualising ongoing conflicts and disasters." },
+    { "name": "UNHCR Data", "url": "https://www.unhcr.org/refugee-statistics", "category": "Conflict & Health", "description": "Authoritative displacement and migration flow data." },
+
+    { "name": "ENTSO-E Transparency", "url": "https://transparency.entsoe.eu", "category": "Energy & Grid", "description": "Hourly EU generation, load and cross-border flows with a real API." },
+    { "name": "Ember", "url": "https://ember-energy.org", "category": "Energy & Grid", "description": "European electricity generation by fuel source; relevant to CBAM." },
+
+    { "name": "FRED", "url": "https://fred.stlouisfed.org", "category": "Macro & Markets", "description": "St. Louis Fed economic time series; excellent free API with vintage data." },
+    { "name": "Trading Economics", "url": "https://tradingeconomics.com", "category": "Macro & Markets", "description": "Global indicators calendar; useful for release timing." },
+
+    { "name": "mempool.space", "url": "https://mempool.space", "category": "Digital", "description": "Bitcoin mempool explorer: unconfirmed transactions, fee rates, block space." },
+    { "name": "Kaspersky Cybermap", "url": "https://cybermap.kaspersky.com", "category": "Digital", "description": "Stylised globe of attacks hitting Kaspersky sensors; marketing more than intelligence." },
+    { "name": "Internet Live Stats", "url": "https://www.internetlivestats.com", "category": "Digital", "description": "Extrapolated internet usage counters, not measured throughput." },
+    { "name": "Wikimedia Statistics", "url": "https://stats.wikimedia.org", "category": "Digital", "description": "Wikipedia edit and pageview data; a decent attention proxy." },
+    { "name": "ISS Tracker", "url": "https://isstracker.live", "category": "Digital", "description": "International Space Station orbital position in real time." },
+    { "name": "Dead Drops", "url": "https://deaddrops.com", "category": "Digital", "description": "Map of USB sticks cemented into public walls; a 2010 art project, mostly defunct." }
+  ]
 }
