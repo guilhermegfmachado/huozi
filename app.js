@@ -451,6 +451,13 @@ function interleave(articles) {
   }
   return result;
 }
+// Some feeds ship a description that is just the headline again. Rendering it
+// twice reads as a bug, so drop the description when it adds nothing.
+function hasUsefulDesc(a) {
+  const norm = s => (s || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[.…]+$/, '');
+  const d = norm(a.desc);
+  return d && d !== norm(a.title);
+}
 function articleHTML(a, isSub = false) {
   const isSaved = S.saved.has(a.id);
   const langBadge = a.lang !== 'en'
@@ -482,7 +489,7 @@ function articleHTML(a, isSub = false) {
             onclick="event.stopPropagation();flashTimestamp(this)">${relativeTime(new Date(a.date))}</span>
     </div>
     <div class="a-title">${esc(a.title)}</div>
-    ${isSub ? '' : `<div class="a-desc">${esc(a.desc)}</div>`}
+    ${isSub || !hasUsefulDesc(a) ? '' : `<div class="a-desc">${esc(a.desc)}</div>`}
     <div class="a-actions">
       <button class="a-action-btn${isSaved?' saved':''}"
         onclick="event.stopPropagation();toggleSave(this.closest('[data-id]').dataset.id)">${isSaved?'◆ saved':'◇ save'}</button>
@@ -615,11 +622,6 @@ function toggleCompact() {
 }
 function doRefresh() { refresh(); }
 function updateStats() {
-  ['st-a','st-s','st-l'].forEach(id => document.getElementById(id).classList.remove('stat-loading'));
-  document.getElementById('st-a').textContent = S.articles.length;
-  document.getElementById('st-s').textContent = new Set(S.articles.map(a=>a.feedId)).size;
-  document.getElementById('st-l').textContent = new Set(S.articles.map(a=>a.lang)).size;
-  document.getElementById('st-r').textContent = S.read.size;
   const cSaved = document.getElementById('c-saved');
   cSaved.textContent = S.saved.size;
   cSaved.classList.toggle('has-saved', S.saved.size > 0);
@@ -672,7 +674,6 @@ function toggleSave(id) {
 function openReader(id) {
   const a = S.articles.find(x => x.id===id); if (!a) return;
   S.active = id; S.read.add(id); saveRead();
-  document.getElementById('st-r').textContent = S.read.size;
   document.querySelectorAll('.article').forEach(el => {
     el.classList.toggle('active', el.dataset.id===id);
     if (el.dataset.id===id) el.classList.remove('read');
@@ -953,7 +954,7 @@ function setNewsCat(nc) {
 function showSection(name) {
   M.currentSection = name;
   clearInterval(M.refreshTimer);
-  ['feed-bar','news-cat-filter','articles','statusbar','footer'].forEach(id => {
+  ['feed-bar','news-cat-filter','articles','footer'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -979,7 +980,7 @@ function showSection(name) {
 function showNews() {
   M.currentSection = null;
   clearInterval(M.refreshTimer);
-  ['feed-bar','news-cat-filter','articles','statusbar','footer'].forEach(id => {
+  ['feed-bar','news-cat-filter','articles','footer'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = '';
   });

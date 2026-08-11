@@ -354,13 +354,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   animation: spin 0.65s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes stat-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.8} }
-.stat-loading::after {
-  content: '···';
-  display: inline-block;
-  animation: stat-pulse 1.2s ease-in-out infinite;
-  letter-spacing: 0.05em;
-}
 #empty {
   padding: 5rem 1rem; text-align: center;
   color: var(--text-dim); font-size: 0.72rem;
@@ -384,14 +377,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 #footer a:hover { color: var(--accent); }
 #footer .footer-sep { color: var(--border); margin: 0 0.5rem; }
-#statusbar {
-  height: 22px; flex-shrink: 0;
-  border-top: 1px solid var(--border); background: var(--bg-panel);
-  display: flex; align-items: center;
-  padding: 0 1rem; gap: 1.3rem;
-  font-size: 0.6rem; color: var(--text-dim);
-}
-#statusbar span { color: var(--text); }
 /* ── READER ──────────────────────────────────────────── */
 #reader {
   width: 390px; flex-shrink: 0;
@@ -537,7 +522,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .a-action-btn { font-size: 0.63rem; }
 
   /* Stats bar hidden on mobile */
-  #statusbar { display: none; }
 
   /* Footer: compact single line on mobile */
   #footer { padding: 0.3rem 0.75rem; font-size: 0.58rem; }
@@ -844,7 +828,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .form-row { gap: 0.4rem; }
 }
 /* ── SORT LABEL ──────────────────────────────────────── */
-#sort-label { font-size: 0.6rem; color: var(--text-dim); flex-shrink: 0; letter-spacing: 0.04em; }
 /* ── SIDEBAR MODE BAR ────────────────────────────────── */
 .sb-dir-btn {
   margin-left: auto; font-size: 0.57rem; color: var(--text-dim);
